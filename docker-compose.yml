@@ -2,7 +2,7 @@ version: "3"
 
 services:
   web:
-    build: .
+    image: hiyuki2578/misskey:latest 
     restart: always
     links:
       - db
