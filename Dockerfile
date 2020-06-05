@@ -8,6 +8,8 @@ WORKDIR /misskey
 
 FROM base AS builder
 
+ARG VERSION_HASH
+
 RUN apk add --no-cache \
     autoconf \
     automake \
@@ -25,7 +27,7 @@ RUN apk add --no-cache \
 COPY package.json yarn.lock ./
 RUN yarn install
 COPY . ./
-RUN yarn build
+RUN node version-patch.js ${VERSION_HASH} && yarn build
 
 FROM base AS runner
 

@@ -19,7 +19,7 @@ jobs:
       - run:
           name: Build
           command: |
-            docker build -t hiyuki2578/misskey .
+            docker build -t hiyuki2578/misskey --build-arg=VERSION_HASH=$CIRCLE_SHA1 .
       - when:
           condition: <<parameters.with_deploy>>
           steps:
