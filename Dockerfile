@@ -2,6 +2,8 @@ FROM node:14.2.0-alpine AS base
 
 ENV NODE_ENV=production
 
+ARG VERSION_HASH
+
 RUN npm i -g npm@latest
 
 WORKDIR /misskey
@@ -25,7 +27,7 @@ RUN apk add --no-cache \
 COPY package.json yarn.lock ./
 RUN yarn install
 COPY . ./
-RUN yarn build
+RUN node version-patch.js $VERSION_HASH && yarn build
 
 FROM base AS runner
 
