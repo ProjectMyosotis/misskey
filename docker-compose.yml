@@ -2,7 +2,7 @@ version: "3"
 
 services:
   web:
-    image: hiyuki2578/misskey:latest 
+    image: projectmyosotis/misskey:latest 
     restart: always
     links:
       - db
