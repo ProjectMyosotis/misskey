@@ -1,6 +1,7 @@
 import { utils, values } from '@syuilo/aiscript';
 import { jsToVal } from '@syuilo/aiscript/built/interpreter/util';
 
+// TODO: vue3に移行した折にはvmを渡す必要は無くなるはず
 export function createAiScriptEnv(vm, opts) {
 	let apiRequests = 0;
 	return {
@@ -14,9 +15,9 @@ export function createAiScriptEnv(vm, opts) {
 				text: text.value,
 			});
 		}),
-		'Mk:confirm': values.FN_NATIVE(async ([title, text]) => {
+		'Mk:confirm': values.FN_NATIVE(async ([title, text, type]) => {
 			const confirm = await vm.$root.dialog({
-				type: 'warning',
+				type: type ? type.value : 'question',
 				showCancelButton: true,
 				title: title.value,
 				text: text.value,
@@ -42,14 +43,16 @@ export function createAiScriptEnv(vm, opts) {
 	};
 }
 
+// TODO: vue3に移行した折にはvmを渡す必要は無くなるはず
 export function createPluginEnv(vm, opts) {
 	const config = new Map();
-	for (const [k, v] of Object.entries(opts.plugin.config)) {
+	for (const [k, v] of Object.entries(opts.plugin.config || {})) {
 		config.set(k, jsToVal(opts.plugin.configData[k] || v.default));
 	}
 
 	return {
 		...createAiScriptEnv(vm, { ...opts, token: opts.plugin.token }),
+		//#region Deprecated
 		'Mk:register_post_form_action': values.FN_NATIVE(([title, handler]) => {
 			vm.$store.commit('registerPostFormAction', { pluginId: opts.plugin.id, title: title.value, handler });
 		}),
@@ -58,6 +61,25 @@ export function createPluginEnv(vm, opts) {
 		}),
 		'Mk:register_note_action': values.FN_NATIVE(([title, handler]) => {
 			vm.$store.commit('registerNoteAction', { pluginId: opts.plugin.id, title: title.value, handler });
+		}),
+		//#endregion
+		'Plugin:register_post_form_action': values.FN_NATIVE(([title, handler]) => {
+			vm.$store.commit('registerPostFormAction', { pluginId: opts.plugin.id, title: title.value, handler });
+		}),
+		'Plugin:register_user_action': values.FN_NATIVE(([title, handler]) => {
+			vm.$store.commit('registerUserAction', { pluginId: opts.plugin.id, title: title.value, handler });
+		}),
+		'Plugin:register_note_action': values.FN_NATIVE(([title, handler]) => {
+			vm.$store.commit('registerNoteAction', { pluginId: opts.plugin.id, title: title.value, handler });
+		}),
+		'Plugin:register_note_view_interruptor': values.FN_NATIVE(([handler]) => {
+			vm.$store.commit('registerNoteViewInterruptor', { pluginId: opts.plugin.id, handler });
+		}),
+		'Plugin:register_note_post_interruptor': values.FN_NATIVE(([handler]) => {
+			vm.$store.commit('registerNotePostInterruptor', { pluginId: opts.plugin.id, handler });
+		}),
+		'Plugin:open_url': values.FN_NATIVE(([url]) => {
+			window.open(url.value, '_blank');
 		}),
 		'Plugin:config': values.OBJ(config),
 	};
