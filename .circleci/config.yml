@@ -19,6 +19,7 @@ jobs:
       - run:
           name: Build
           command: |
+            docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
             docker build -t projectmyosotis/misskey --build-arg=VERSION_HASH=$CIRCLE_SHA1 .
       - when:
           condition: <<parameters.with_deploy>>
