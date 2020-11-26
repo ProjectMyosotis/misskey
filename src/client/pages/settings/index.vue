@@ -1,58 +1,73 @@
 <template>
 <div class="vvcocwet" :class="{ wide: !narrow }" ref="el">
-	<div class="nav" v-if="!narrow || $route.name === 'settings'">
-		<div class="menu">
-			<div class="label">{{ $t('basicSettings') }}</div>
-			<router-link class="item" replace to="/settings/profile"><Fa :icon="faUser" fixed-width class="icon"/>{{ $t('profile') }}</router-link>
-			<router-link class="item" replace to="/settings/privacy"><Fa :icon="faLockOpen" fixed-width class="icon"/>{{ $t('privacy') }}</router-link>
-			<router-link class="item" replace to="/settings/reaction"><Fa :icon="faLaugh" fixed-width class="icon"/>{{ $t('reaction') }}</router-link>
-			<router-link class="item" replace to="/settings/notifications"><Fa :icon="faBell" fixed-width class="icon"/>{{ $t('notifications') }}</router-link>
-			<router-link class="item" replace to="/settings/integration"><Fa :icon="faShareAlt" fixed-width class="icon"/>{{ $t('integration') }}</router-link>
-			<router-link class="item" replace to="/settings/security"><Fa :icon="faLock" fixed-width class="icon"/>{{ $t('security') }}</router-link>
-		</div>
-		<div class="menu">
-			<div class="label">{{ $t('clientSettings') }}</div>
-			<router-link class="item" replace to="/settings/general"><Fa :icon="faCogs" fixed-width class="icon"/>{{ $t('general') }}</router-link>
-			<router-link class="item" replace to="/settings/theme"><Fa :icon="faPalette" fixed-width class="icon"/>{{ $t('theme') }}</router-link>
-			<router-link class="item" replace to="/settings/sidebar"><Fa :icon="faListUl" fixed-width class="icon"/>{{ $t('sidebar') }}</router-link>
-			<router-link class="item" replace to="/settings/sounds"><Fa :icon="faMusic" fixed-width class="icon"/>{{ $t('sounds') }}</router-link>
-			<router-link class="item" replace to="/settings/plugins"><Fa :icon="faPlug" fixed-width class="icon"/>{{ $t('plugins') }}</router-link>
-		</div>
-		<div class="menu">
-			<div class="label">{{ $t('otherSettings') }}</div>
-			<router-link class="item" replace to="/settings/mute-block"><Fa :icon="faBan" fixed-width class="icon"/>{{ $t('muteAndBlock') }}</router-link>
-			<router-link class="item" replace to="/settings/word-mute"><Fa :icon="faCommentSlash" fixed-width class="icon"/>{{ $t('wordMute') }}</router-link>
-			<router-link class="item" replace to="/settings/api"><Fa :icon="faKey" fixed-width class="icon"/>API</router-link>
-			<router-link class="item" replace to="/settings/other"><Fa :icon="faEllipsisH" fixed-width class="icon"/>{{ $t('other') }}</router-link>
-		</div>
-		<div class="menu">
-			<button class="_button item" @click="logout">{{ $t('logout') }}</button>
-		</div>
-	</div>
+	<FormBase class="nav" v-if="!narrow || page == null" :force-wide="!narrow">
+		<FormGroup>
+			<template #label>{{ $t('basicSettings') }}</template>
+			<FormLink :active="page === 'profile'" replace to="/settings/profile"><template #icon><Fa :icon="faUser"/></template>{{ $t('profile') }}</FormLink>
+			<FormLink :active="page === 'privacy'" replace to="/settings/privacy"><template #icon><Fa :icon="faLockOpen"/></template>{{ $t('privacy') }}</FormLink>
+			<FormLink :active="page === 'reaction'" replace to="/settings/reaction"><template #icon><Fa :icon="faLaugh"/></template>{{ $t('reaction') }}</FormLink>
+			<FormLink :active="page === 'notifications'" replace to="/settings/notifications"><template #icon><Fa :icon="faBell"/></template>{{ $t('notifications') }}</FormLink>
+			<FormLink :active="page === 'email'" replace to="/settings/email"><template #icon><Fa :icon="faEnvelope"/></template>{{ $t('email') }}</FormLink>
+			<FormLink :active="page === 'integration'" replace to="/settings/integration"><template #icon><Fa :icon="faShareAlt"/></template>{{ $t('integration') }}</FormLink>
+			<FormLink :active="page === 'security'" replace to="/settings/security"><template #icon><Fa :icon="faLock"/></template>{{ $t('security') }}</FormLink>
+		</FormGroup>
+		<FormGroup>
+			<template #label>{{ $t('clientSettings') }}</template>
+			<FormLink :active="page === 'general'" replace to="/settings/general"><template #icon><Fa :icon="faCogs"/></template>{{ $t('general') }}</FormLink>
+			<FormLink :active="page === 'theme'" replace to="/settings/theme"><template #icon><Fa :icon="faPalette"/></template>{{ $t('theme') }}</FormLink>
+			<FormLink :active="page === 'sidebar'" replace to="/settings/sidebar"><template #icon><Fa :icon="faListUl"/></template>{{ $t('sidebar') }}</FormLink>
+			<FormLink :active="page === 'sounds'" replace to="/settings/sounds"><template #icon><Fa :icon="faMusic"/></template>{{ $t('sounds') }}</FormLink>
+			<FormLink :active="page === 'plugins'" replace to="/settings/plugins"><template #icon><Fa :icon="faPlug"/></template>{{ $t('plugins') }}</FormLink>
+		</FormGroup>
+		<FormGroup>
+			<template #label>{{ $t('otherSettings') }}</template>
+			<FormLink :active="page === 'import-export'" replace to="/settings/import-export"><template #icon><Fa :icon="faBoxes"/></template>{{ $t('importAndExport') }}</FormLink>
+			<FormLink :active="page === 'mute-block'" replace to="/settings/mute-block"><template #icon><Fa :icon="faBan"/></template>{{ $t('muteAndBlock') }}</FormLink>
+			<FormLink :active="page === 'word-mute'" replace to="/settings/word-mute"><template #icon><Fa :icon="faCommentSlash"/></template>{{ $t('wordMute') }}</FormLink>
+			<FormLink :active="page === 'api'" replace to="/settings/api"><template #icon><Fa :icon="faKey"/></template>API</FormLink>
+			<FormLink :active="page === 'other'" replace to="/settings/other"><template #icon><Fa :icon="faEllipsisH"/></template>{{ $t('other') }}</FormLink>
+		</FormGroup>
+		<FormGroup>
+			<FormButton @click="logout" danger>{{ $t('logout') }}</FormButton>
+		</FormGroup>
+	</FormBase>
 	<div class="main">
-		<router-view v-slot="{ Component }">
-			<transition :name="($store.state.device.animation && !narrow) ? 'view-slide' : ''" appear mode="out-in">
-				<component :is="Component" @info="onInfo"/>
-			</transition>
-		</router-view>
+		<component :is="component" @info="onInfo"/>
 	</div>
 </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
-import { faCog, faPalette, faPlug, faUser, faListUl, faLock, faCommentSlash, faMusic, faCogs, faEllipsisH, faBan, faShareAlt, faLockOpen, faKey } from '@fortawesome/free-solid-svg-icons';
-import { faLaugh, faBell } from '@fortawesome/free-regular-svg-icons';
+import { computed, defineAsyncComponent, defineComponent, nextTick, onMounted, ref, watch } from 'vue';
+import { faCog, faPalette, faPlug, faUser, faListUl, faLock, faCommentSlash, faMusic, faCogs, faEllipsisH, faBan, faShareAlt, faLockOpen, faKey, faBoxes } from '@fortawesome/free-solid-svg-icons';
+import { faLaugh, faBell, faEnvelope } from '@fortawesome/free-regular-svg-icons';
 import { store } from '@/store';
 import { i18n } from '@/i18n';
+import FormLink from '@/components/form/link.vue';
+import FormGroup from '@/components/form/group.vue';
+import FormBase from '@/components/form/base.vue';
+import FormButton from '@/components/form/button.vue';
+import { scroll } from '../../scripts/scroll';
 
 export default defineComponent({
+	components: {
+		FormBase,
+		FormLink,
+		FormGroup,
+		FormButton,
+	},
+
+	props: {
+		page: {
+			type: String,
+			required: false
+		}
+	},
+
 	setup(props, context) {
 		const INFO = ref({
-			header: [{
-				title: i18n.global.t('settings'),
-				icon: faCog
-			}]
+			title: i18n.global.t('settings'),
+			icon: faCog
 		});
 		const narrow = ref(false);
 		const view = ref(null);
@@ -60,9 +75,45 @@ export default defineComponent({
 		const onInfo = (viewInfo) => {
 			INFO.value = viewInfo;
 		};
+		const component = computed(() => {
+			switch (props.page) {
+				case 'profile': return defineAsyncComponent(() => import('./profile.vue'));
+				case 'privacy': return defineAsyncComponent(() => import('./privacy.vue'));
+				case 'reaction': return defineAsyncComponent(() => import('./reaction.vue'));
+				case 'notifications': return defineAsyncComponent(() => import('./notifications.vue'));
+				case 'mute-block': return defineAsyncComponent(() => import('./mute-block.vue'));
+				case 'word-mute': return defineAsyncComponent(() => import('./word-mute.vue'));
+				case 'integration': return defineAsyncComponent(() => import('./integration.vue'));
+				case 'security': return defineAsyncComponent(() => import('./security.vue'));
+				case '2fa': return defineAsyncComponent(() => import('./2fa.vue'));
+				case 'api': return defineAsyncComponent(() => import('./api.vue'));
+				case 'apps': return defineAsyncComponent(() => import('./apps.vue'));
+				case 'other': return defineAsyncComponent(() => import('./other.vue'));
+				case 'general': return defineAsyncComponent(() => import('./general.vue'));
+				case 'email': return defineAsyncComponent(() => import('./email.vue'));
+				case 'email/address': return defineAsyncComponent(() => import('./email-address.vue'));
+				case 'theme': return defineAsyncComponent(() => import('./theme.vue'));
+				case 'theme/install': return defineAsyncComponent(() => import('./theme.install.vue'));
+				case 'theme/manage': return defineAsyncComponent(() => import('./theme.manage.vue'));
+				case 'sidebar': return defineAsyncComponent(() => import('./sidebar.vue'));
+				case 'sounds': return defineAsyncComponent(() => import('./sounds.vue'));
+				case 'deck': return defineAsyncComponent(() => import('./deck.vue'));
+				case 'plugins': return defineAsyncComponent(() => import('./plugins.vue'));
+				case 'import-export': return defineAsyncComponent(() => import('./import-export.vue'));
+				case 'account-info': return defineAsyncComponent(() => import('./account-info.vue'));
+				case 'regedit': return defineAsyncComponent(() => import('./regedit.vue'));
+				default: return null;
+			}
+		});
+
+		watch(component, () => {
+			nextTick(() => {
+				scroll(el.value, 0);
+			});
+		});
 
 		onMounted(() => {
-			narrow.value = el.value.offsetWidth < 650;
+			narrow.value = el.value.offsetWidth < 1025;
 		});
 
 		return {
@@ -71,83 +122,41 @@ export default defineComponent({
 			view,
 			el,
 			onInfo,
+			component,
 			logout: () => {
 				store.dispatch('logout');
 				location.href = '/';
 			},
-			faPalette, faPlug, faUser, faListUl, faLock, faLaugh, faCommentSlash, faMusic, faBell, faCogs, faEllipsisH, faBan, faShareAlt, faLockOpen, faKey,
+			faPalette, faPlug, faUser, faListUl, faLock, faLaugh, faCommentSlash, faMusic, faBell, faCogs, faEllipsisH, faBan, faShareAlt, faLockOpen, faKey, faBoxes, faEnvelope,
 		};
 	},
 });
 </script>
 
 <style lang="scss" scoped>
-.view-slide-enter-active, .view-slide-leave-active {
-	transition: opacity 0.3s, transform 0.3s !important;
-}
-.view-slide-enter-from, .view-slide-leave-to {
-	opacity: 0;
-	transform: translateX(32px);
-}
-
 .vvcocwet {
-	max-width: 1000px;
-	margin: 0 auto;
-
-	> .nav {
-		> .menu {
-			margin: 16px 0;
-
-			> .label {
-				padding: 8px 32px;
-				font-size: 80%;
-				opacity: 0.7;
-			}
-
-			> .item {
-				display: block;
-				width: 100%;
-				box-sizing: border-box;
-				padding: 0 32px;
-				line-height: 48px;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				//background: var(--panel);
-				//border-bottom: solid 1px var(--divider);
-				transition: padding 0.2s ease, color 0.1s ease;
-
-				&:first-of-type {
-					//border-top: solid 1px var(--divider);
-				}
-
-				&.router-link-active {
-					color: var(--accent);
-					padding-left: 42px;
-				}
-
-				&:hover {
-					text-decoration: none;
-					padding-left: 42px;
-				}
-
-				> .icon {
-					margin-right: 0.5em;
-				}
-			}
-		}
-	}
-
 	&.wide {
 		display: flex;
+		max-width: 1100px;
+		margin: 0 auto;
 
 		> .nav {
-			width: 30%;
-			max-width: 260px;
+			width: 32%;
+			box-sizing: border-box;
+			border-right: solid 0.5px var(--divider);
 		}
 
 		> .main {
 			flex: 1;
+			--baseContentWidth: 100%;
+
+			::v-deep(._section) {
+				padding: 0 0 32px 0;
+
+				& + ._section {
+					padding-top: 32px;
+				}
+			}
 		}
 	}
 }

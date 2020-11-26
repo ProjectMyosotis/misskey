@@ -17,7 +17,7 @@
 		</main>
 	</div>
 
-	<StreamIndicator/>
+	<XCommon/>
 </div>
 </template>
 
@@ -28,10 +28,12 @@ import { faBell } from '@fortawesome/free-regular-svg-icons';
 import { host } from '@/config';
 import { search } from '@/scripts/search';
 import XHeader from './_common_/header.vue';
+import XCommon from './_common_/common.vue';
 import * as os from '@/os';
 
 export default defineComponent({
 	components: {
+		XCommon,
 		XHeader,
 	},
 
@@ -40,7 +42,6 @@ export default defineComponent({
 			host: host,
 			pageKey: 0,
 			pageInfo: null,
-			connection: null,
 			faLayerGroup, faBars, faBell, faHome, faCircle,
 		};
 	},
@@ -68,9 +69,6 @@ export default defineComponent({
 
 	created() {
 		document.documentElement.style.overflowY = 'scroll';
-
-		this.connection = os.stream.useSharedConnection('main');
-		this.connection.on('notification', this.onNotification);
 	},
 
 	methods: {
@@ -91,23 +89,6 @@ export default defineComponent({
 
 		onTransition() {
 			if (window._scroll) window._scroll();
-		},
-
-		async onNotification(notification) {
-			if (this.$store.state.i.mutingNotificationTypes.includes(notification.type)) {
-				return;
-			}
-			if (document.visibilityState === 'visible') {
-				os.stream.send('readNotification', {
-					id: notification.id
-				});
-
-				os.popup(await import('@/components/toast.vue'), {
-					notification
-				}, {}, 'closed');
-			}
-
-			os.sound('notification');
 		},
 	}
 });

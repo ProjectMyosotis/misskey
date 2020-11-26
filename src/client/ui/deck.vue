@@ -29,7 +29,7 @@
 	<button v-if="$store.getters.isSignedIn" class="nav _button" @click="showNav()"><Fa :icon="faBars"/><i v-if="navIndicated"><Fa :icon="faCircle"/></i></button>
 	<button v-if="$store.getters.isSignedIn" class="post _buttonPrimary" @click="post()"><Fa :icon="faPencilAlt"/></button>
 
-	<StreamIndicator v-if="$store.getters.isSignedIn"/>
+	<XCommon/>
 </div>
 </template>
 
@@ -40,16 +40,18 @@ import {  } from '@fortawesome/free-regular-svg-icons';
 import { v4 as uuid } from 'uuid';
 import { host } from '@/config';
 import { search } from '@/scripts/search';
-import DeckColumnCore from '@/components/deck/column-core.vue';
-import DeckColumn from '@/components/deck/column.vue';
+import DeckColumnCore from '@/ui/deck/column-core.vue';
+import DeckColumn from '@/ui/deck/column.vue';
 import XSidebar from '@/components/sidebar.vue';
 import XHeader from './_common_/header.vue';
 import { getScrollContainer } from '@/scripts/scroll';
 import * as os from '@/os';
 import { sidebarDef } from '@/sidebar';
+import XCommon from './_common_/common.vue';
 
 export default defineComponent({
 	components: {
+		XCommon,
 		XSidebar,
 		XHeader,
 		DeckColumn,
@@ -61,7 +63,6 @@ export default defineComponent({
 			host: host,
 			pageInfo: null,
 			pageKey: 0,
-			connection: null,
 			menuDef: sidebarDef,
 			wallpaper: localStorage.getItem('wallpaper') != null,
 			faPlus, faPencilAlt, faChevronLeft, faBars, faCircle
@@ -105,11 +106,6 @@ export default defineComponent({
 		document.documentElement.style.overflowY = 'hidden';
 		document.documentElement.style.scrollBehavior = 'auto';
 		window.addEventListener('wheel', this.onWheel);
-
-		if (this.$store.getters.isSignedIn) {
-			this.connection = os.stream.useSharedConnection('main');
-			this.connection.on('notification', this.onNotification);
-		}
 	},
 
 	mounted() {
@@ -139,23 +135,6 @@ export default defineComponent({
 
 		post() {
 			os.post();
-		},
-
-		async onNotification(notification) {
-			if (this.$store.state.i.mutingNotificationTypes.includes(notification.type)) {
-				return;
-			}
-
-			if (document.visibilityState === 'visible') {
-				os.stream.send('readNotification', {
-					id: notification.id
-				});
-
-				os.popup(await import('@/components/toast.vue'), {
-					notification
-				}, {}, 'closed');
-			}
-			os.sound('notification');
 		},
 
 		async addColumn(ev) {

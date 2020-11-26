@@ -15,19 +15,24 @@ export default defineComponent({
 		XNotes
 	},
 
+	props: {
+		tag: {
+			type: String,
+			required: true
+		}
+	},
+
 	data() {
 		return {
 			INFO: {
-				header: [{
-					title: this.$route.params.tag,
-					icon: faHashtag
-				}],
+				title: this.tag,
+				icon: faHashtag
 			},
 			pagination: {
 				endpoint: 'notes/search-by-tag',
 				limit: 10,
 				params: () => ({
-					tag: this.$route.params.tag,
+					tag: this.tag,
 				})
 			},
 			faHashtag
@@ -35,7 +40,7 @@ export default defineComponent({
 	},
 
 	watch: {
-		$route() {
+		tag() {
 			(this.$refs.notes as any).reload();
 		}
 	},

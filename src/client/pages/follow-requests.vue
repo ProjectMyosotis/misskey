@@ -12,7 +12,7 @@
 				<MkAvatar class="avatar" :user="req.follower"/>
 				<div class="body">
 					<div class="name">
-						<router-link class="name" :to="userPage(req.follower)" v-user-preview="req.follower.id"><MkUserName :user="req.follower"/></router-link>
+						<MkA class="name" :to="userPage(req.follower)" v-user-preview="req.follower.id"><MkUserName :user="req.follower"/></MkA>
 						<p class="acct">@{{ acct(req.follower) }}</p>
 					</div>
 					<div class="description" v-if="req.follower.description" :title="req.follower.description">
@@ -44,10 +44,8 @@ export default defineComponent({
 	data() {
 		return {
 			INFO: {
-				header: [{
-					title: this.$t('followRequests'),
-					icon: faUserClock,
-				}],
+				title: this.$t('followRequests'),
+				icon: faUserClock,
 			},
 			pagination: {
 				endpoint: 'following/requests/list',

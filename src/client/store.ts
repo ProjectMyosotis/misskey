@@ -36,7 +36,7 @@ export const defaultDeviceUserSettings = {
 		'announcements',
 		'search',
 		'-',
-		'deck',
+		'ui',
 	],
 	deck: {
 		columns: [],
@@ -55,13 +55,14 @@ export const defaultDeviceUserSettings = {
 export const defaultDeviceSettings = {
 	lang: null,
 	loadRawImages: false,
-	alwaysShowNsfw: false,
+	nsfw: 'respect', // respect, force, ignore
 	useOsNativeEmojis: false,
 	serverDisconnectedBehavior: 'quiet',
 	accounts: [],
-	recentEmojis: [],
+	recentlyUsedEmojis: [],
+	recentlyUsedUsers: [],
 	themes: [],
-	darkTheme: '8c539dc1-0fab-4d47-9194-39c508e9bfe1',
+	darkTheme: '8050783a-7f63-445a-b270-36d0f6ba1677',
 	lightTheme: '4eea646f-7afa-4645-83e9-83af0333cd37',
 	darkMode: false,
 	deckMode: false,
@@ -70,24 +71,22 @@ export const defaultDeviceSettings = {
 	animatedMfm: true,
 	imageNewTab: false,
 	chatOpenBehavior: 'page',
+	defaultSideView: false,
+	deckNavWindow: true,
 	showFixedPostForm: false,
 	disablePagesScript: false,
 	enableInfiniteScroll: true,
 	useBlurEffectForModal: true,
+	useFullReactionPicker: false,
+	reactionPickerWidth: 1,
+	reactionPickerHeight: 1,
 	sidebarDisplay: 'full', // full, icon, hide
+	instanceTicker: 'remote', // none, remote, always
 	roomGraphicsQuality: 'medium',
 	roomUseOrthographicCamera: true,
 	deckColumnAlign: 'left',
 	deckAlwaysShowMainColumn: true,
 	deckMainColumnPlace: 'left',
-	sfxVolume: 0.3,
-	sfxNote: 'syuilo/down',
-	sfxNoteMy: 'syuilo/up',
-	sfxNotification: 'syuilo/pope2',
-	sfxChat: 'syuilo/pope1',
-	sfxChatBg: 'syuilo/waon',
-	sfxAntenna: 'syuilo/triple',
-	sfxChannel: 'syuilo/square-pico',
 	userData: {},
 };
 
@@ -179,6 +178,16 @@ export const store = createStore({
 				meta: null
 			},
 
+			getters: {
+				emojiCategories: state => {
+					const categories = new Set();
+					for (const emoji of state.meta.emojis) {
+						categories.add(emoji.category);
+					}
+					return Array.from(categories);
+				},
+			},
+
 			mutations: {
 				set(state, meta) {
 					state.meta = meta;
@@ -202,6 +211,15 @@ export const store = createStore({
 			state: defaultDeviceSettings,
 
 			mutations: {
+				overwrite(state, x) {
+					for (const k of Object.keys(state)) {
+						if (x[k] === undefined) delete state[k];
+					}
+					for (const k of Object.keys(x)) {
+						state[k] = x[k];
+					}
+				},
+
 				set(state, x: { key: string; value: any }) {
 					state[x.key] = x.value;
 				},
@@ -218,9 +236,18 @@ export const store = createStore({
 			state: defaultDeviceUserSettings,
 
 			mutations: {
+				overwrite(state, x) {
+					for (const k of Object.keys(state)) {
+						if (x[k] === undefined) delete state[k];
+					}
+					for (const k of Object.keys(x)) {
+						state[k] = x[k];
+					}
+				},
+
 				init(state, x) {
 					for (const [key, value] of Object.entries(defaultDeviceUserSettings)) {
-						if (x[key]) {
+						if (Object.prototype.hasOwnProperty.call(x, key)) {
 							state[key] = x[key];
 						} else {
 							state[key] = value;
@@ -438,7 +465,7 @@ export const store = createStore({
 
 				init(state, x) {
 					for (const [key, value] of Object.entries(defaultSettings)) {
-						if (x[key]) {
+						if (Object.prototype.hasOwnProperty.call(x, key)) {
 							state[key] = x[key];
 						} else {
 							state[key] = value;

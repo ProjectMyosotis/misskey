@@ -106,6 +106,13 @@ export const meta = {
 			}
 		},
 
+		noCrawle: {
+			validator: $.optional.bool,
+			desc: {
+				'ja-JP': '検索エンジンによるインデックスを拒否するか否か'
+			}
+		},
+
 		isBot: {
 			validator: $.optional.bool,
 			desc: {
@@ -117,13 +124,6 @@ export const meta = {
 			validator: $.optional.bool,
 			desc: {
 				'ja-JP': '猫か否か'
-			}
-		},
-
-		autoWatch: {
-			validator: $.optional.bool,
-			desc: {
-				'ja-JP': '投稿の自動ウォッチをするか否か'
 			}
 		},
 
@@ -211,8 +211,8 @@ export default define(meta, async (ps, user, token) => {
 	if (typeof ps.isBot === 'boolean') updates.isBot = ps.isBot;
 	if (typeof ps.carefulBot === 'boolean') profileUpdates.carefulBot = ps.carefulBot;
 	if (typeof ps.autoAcceptFollowed === 'boolean') profileUpdates.autoAcceptFollowed = ps.autoAcceptFollowed;
+	if (typeof ps.noCrawle === 'boolean') profileUpdates.noCrawle = ps.noCrawle;
 	if (typeof ps.isCat === 'boolean') updates.isCat = ps.isCat;
-	if (typeof ps.autoWatch === 'boolean') profileUpdates.autoWatch = ps.autoWatch;
 	if (typeof ps.injectFeaturedNote === 'boolean') profileUpdates.injectFeaturedNote = ps.injectFeaturedNote;
 	if (typeof ps.alwaysMarkNsfw === 'boolean') profileUpdates.alwaysMarkNsfw = ps.alwaysMarkNsfw;
 

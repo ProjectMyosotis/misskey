@@ -2,36 +2,41 @@ import { Component, defineAsyncComponent, markRaw, reactive, Ref, ref } from 'vu
 import { EventEmitter } from 'eventemitter3';
 import Stream from '@/scripts/stream';
 import { store } from '@/store';
-import { apiUrl } from '@/config';
+import { apiUrl, debug } from '@/config';
 import MkPostFormDialog from '@/components/post-form-dialog.vue';
+import MkWaitingDialog from '@/components/waiting-dialog.vue';
+import { resolve } from '@/router';
+import { device } from './cold-storage';
 
 const ua = navigator.userAgent.toLowerCase();
 export const isMobile = /mobile|iphone|ipad|android/.test(ua);
 
-export const stream = new Stream();
+export const stream = markRaw(new Stream());
 
 export const pendingApiRequestsCount = ref(0);
+let apiRequestsCount = 0; // for debug
+export const apiRequests = ref([]); // for debug
 
 export const windows = new Map();
 
 export function api(endpoint: string, data: Record<string, any> = {}, token?: string | null | undefined) {
 	pendingApiRequestsCount.value++;
 
-	if (_DEV_) {
-		performance.mark(_PERF_PREFIX_ + 'api:begin');
-	}
-
 	const onFinally = () => {
 		pendingApiRequestsCount.value--;
-
-		if (_DEV_) {
-			performance.mark(_PERF_PREFIX_ + 'api:end');
-
-			performance.measure(_PERF_PREFIX_ + 'api',
-				_PERF_PREFIX_ + 'api:begin',
-				_PERF_PREFIX_ + 'api:end');
-		}
 	};
+
+	const log = debug ? reactive({
+		id: ++apiRequestsCount,
+		endpoint,
+		req: markRaw(data),
+		res: null,
+		state: 'pending',
+	}) : null;
+	if (debug) {
+		apiRequests.value.push(log);
+		if (apiRequests.value.length > 128) apiRequests.value.shift();
+	}
 
 	const promise = new Promise((resolve, reject) => {
 		// Append a credential
@@ -49,10 +54,21 @@ export function api(endpoint: string, data: Record<string, any> = {}, token?: st
 
 			if (res.status === 200) {
 				resolve(body);
+				if (debug) {
+					log.res = markRaw(body);
+					log.state = 'success';
+				}
 			} else if (res.status === 204) {
 				resolve();
+				if (debug) {
+					log.state = 'success';
+				}
 			} else {
 				reject(body.error);
+				if (debug) {
+					log.res = markRaw(body.error);
+					log.state = 'failed';
+				}
 			}
 		}).catch(reject);
 	});
@@ -111,7 +127,8 @@ export function promiseDialog<T extends Promise<any>>(
 		}
 	});
 
-	popup(defineAsyncComponent(() => import('@/components/waiting-dialog.vue')), {
+	// NOTE: dynamic importすると挙動がおかしくなる(showingの変更が伝播しない)
+	popup(MkWaitingDialog, {
 		success: success,
 		showing: showing,
 		text: text,
@@ -124,17 +141,20 @@ function isModule(x: any): x is typeof import('*.vue') {
 	return x.default != null;
 }
 
+let popupIdCount = 0;
 export const popups = ref([]) as Ref<{
 	id: any;
 	component: any;
 	props: Record<string, any>;
 }[]>;
 
-export function popup(component: Component | typeof import('*.vue'), props: Record<string, any>, events = {}, disposeEvent?: string) {
+export async function popup(component: Component | typeof import('*.vue') | Promise<Component | typeof import('*.vue')>, props: Record<string, any>, events = {}, disposeEvent?: string) {
+	if (component.then) component = await component;
+
 	if (isModule(component)) component = component.default;
 	markRaw(component);
 
-	const id = Math.random().toString(); // TODO: uuidとか使う
+	const id = ++popupIdCount;
 	const dispose = () => {
 		if (_DEV_) console.log('os:popup close', id, component, props, events);
 		// このsetTimeoutが無いと挙動がおかしくなる(autocompleteが閉じなくなる)。Vueのバグ？
@@ -160,9 +180,10 @@ export function popup(component: Component | typeof import('*.vue'), props: Reco
 	};
 }
 
-export function pageWindow(url: string, component: Component | typeof import('*.vue'), props: Record<string, any>) {
-	popup(defineAsyncComponent(() => import('@/components/page-window.vue')), {
-		initialUrl: url,
+export function pageWindow(path: string) {
+	const { component, props } = resolve(path);
+	popup(import('@/components/page-window.vue'), {
+		initialPath: path,
 		initialComponent: markRaw(component),
 		initialProps: props,
 	}, {}, 'closed');
@@ -170,7 +191,7 @@ export function pageWindow(url: string, component: Component | typeof import('*.
 
 export function dialog(props: Record<string, any>) {
 	return new Promise((resolve, reject) => {
-		popup(defineAsyncComponent(() => import('@/components/dialog.vue')), props, {
+		popup(import('@/components/dialog.vue'), props, {
 			done: result => {
 				resolve(result ? result : { canceled: true });
 			},
@@ -184,7 +205,7 @@ export function success() {
 		setTimeout(() => {
 			showing.value = false;
 		}, 1000);
-		popup(defineAsyncComponent(() => import('@/components/waiting-dialog.vue')), {
+		popup(import('@/components/waiting-dialog.vue'), {
 			success: true,
 			showing: showing
 		}, {
@@ -196,7 +217,7 @@ export function success() {
 export function waiting() {
 	return new Promise((resolve, reject) => {
 		const showing = ref(true);
-		popup(defineAsyncComponent(() => import('@/components/waiting-dialog.vue')), {
+		popup(import('@/components/waiting-dialog.vue'), {
 			success: false,
 			showing: showing
 		}, {
@@ -207,7 +228,7 @@ export function waiting() {
 
 export function form(title, form) {
 	return new Promise((resolve, reject) => {
-		popup(defineAsyncComponent(() => import('@/components/form-dialog.vue')), { title, form }, {
+		popup(import('@/components/form-dialog.vue'), { title, form }, {
 			done: result => {
 				resolve(result);
 			},
@@ -217,7 +238,7 @@ export function form(title, form) {
 
 export async function selectUser() {
 	return new Promise((resolve, reject) => {
-		popup(defineAsyncComponent(() => import('@/components/user-select-dialog.vue')), {}, {
+		popup(import('@/components/user-select-dialog.vue'), {}, {
 			ok: user => {
 				resolve(user);
 			},
@@ -227,7 +248,7 @@ export async function selectUser() {
 
 export async function selectDriveFile(multiple: boolean) {
 	return new Promise((resolve, reject) => {
-		popup(defineAsyncComponent(() => import('@/components/drive-window.vue')), {
+		popup(import('@/components/drive-select-dialog.vue'), {
 			type: 'file',
 			multiple
 		}, {
@@ -242,7 +263,7 @@ export async function selectDriveFile(multiple: boolean) {
 
 export async function selectDriveFolder(multiple: boolean) {
 	return new Promise((resolve, reject) => {
-		popup(defineAsyncComponent(() => import('@/components/drive-window.vue')), {
+		popup(import('@/components/drive-select-dialog.vue'), {
 			type: 'folder',
 			multiple
 		}, {
@@ -255,10 +276,11 @@ export async function selectDriveFolder(multiple: boolean) {
 	});
 }
 
-export async function pickEmoji(src?: HTMLElement) {
+export async function pickEmoji(src?: HTMLElement, opts) {
 	return new Promise((resolve, reject) => {
-		popup(defineAsyncComponent(() => import('@/components/emoji-picker.vue')), {
-			src
+		popup(import('@/components/emoji-picker.vue'), {
+			src,
+			...opts
 		}, {
 			done: emoji => {
 				resolve(emoji);
@@ -269,7 +291,8 @@ export async function pickEmoji(src?: HTMLElement) {
 
 export function modalMenu(items: any[], src?: HTMLElement, options?: { align?: string; viaKeyboard?: boolean }) {
 	return new Promise((resolve, reject) => {
-		const { dispose } = popup(defineAsyncComponent(() => import('@/components/ui/modal-menu.vue')), {
+		let dispose;
+		popup(import('@/components/ui/modal-menu.vue'), {
 			items,
 			src,
 			align: options?.align,
@@ -279,6 +302,8 @@ export function modalMenu(items: any[], src?: HTMLElement, options?: { align?: s
 				resolve();
 				dispose();
 			},
+		}).then(res => {
+			dispose = res.dispose;
 		});
 	});
 }
@@ -286,7 +311,8 @@ export function modalMenu(items: any[], src?: HTMLElement, options?: { align?: s
 export function contextMenu(items: any[], ev: MouseEvent) {
 	ev.preventDefault();
 	return new Promise((resolve, reject) => {
-		const { dispose } = popup(defineAsyncComponent(() => import('@/components/ui/context-menu.vue')), {
+		let dispose;
+		popup(import('@/components/ui/context-menu.vue'), {
 			items,
 			ev,
 		}, {
@@ -294,6 +320,8 @@ export function contextMenu(items: any[], ev: MouseEvent) {
 				resolve();
 				dispose();
 			},
+		}).then(res => {
+			dispose = res.dispose;
 		});
 	});
 }
@@ -301,22 +329,20 @@ export function contextMenu(items: any[], ev: MouseEvent) {
 export function post(props: Record<string, any>) {
 	return new Promise((resolve, reject) => {
 		// NOTE: MkPostFormDialogをdynamic importするとiOSでテキストエリアに自動フォーカスできない
-		const { dispose } = popup(MkPostFormDialog, props, {
+		// NOTE: ただ、dynamic importしない場合、MkPostFormDialogインスタンスが使いまわされ、
+		//       Vueが渡されたコンポーネントに内部的に__propsというプロパティを生やす影響で、
+		//       複数のpost formを開いたときに場合によってはエラーになる
+		//       もちろん複数のpost formを開けること自体Misskeyサイドのバグなのだが
+		let dispose;
+		popup(MkPostFormDialog, props, {
 			closed: () => {
 				resolve();
 				dispose();
 			},
+		}).then(res => {
+			dispose = res.dispose;
 		});
 	});
-}
-
-export function sound(type: string) {
-	if (store.state.device.sfxVolume === 0) return;
-	const sound = store.state.device['sfx' + type.substr(0, 1).toUpperCase() + type.substr(1)];
-	if (sound == null) return;
-	const audio = new Audio(`/assets/sounds/${sound}.mp3`);
-	audio.volume = store.state.device.sfxVolume;
-	audio.play();
 }
 
 export const deckGlobalEvents = new EventEmitter();

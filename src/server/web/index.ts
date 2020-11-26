@@ -17,7 +17,7 @@ import packFeed from './feed';
 import { fetchMeta } from '../../misc/fetch-meta';
 import { genOpenapiSpec } from '../api/openapi/gen-spec';
 import config from '../../config';
-import { Users, Notes, Emojis, UserProfiles, Pages, Channels } from '../../models';
+import { Users, Notes, Emojis, UserProfiles, Pages, Channels, Clips } from '../../models';
 import parseAcct from '../../misc/acct/parse';
 import getNoteSummary from '../../misc/get-note-summary';
 import { ensure } from '../../prelude/ensure';
@@ -242,9 +242,11 @@ router.get('/notes/:note', async ctx => {
 
 	if (note) {
 		const _note = await Notes.pack(note);
+		const profile = await UserProfiles.findOne(note.userId).then(ensure);
 		const meta = await fetchMeta();
 		await ctx.render('note', {
 			note: _note,
+			profile,
 			// TODO: Let locale changeable by instance setting
 			summary: getNoteSummary(_note, locales['ja-JP']),
 			instanceName: meta.name || 'Misskey',
@@ -280,9 +282,11 @@ router.get('/@:user/pages/:page', async ctx => {
 
 	if (page) {
 		const _page = await Pages.pack(page);
+		const profile = await UserProfiles.findOne(page.userId).then(ensure);
 		const meta = await fetchMeta();
 		await ctx.render('page', {
 			page: _page,
+			profile,
 			instanceName: meta.name || 'Misskey'
 		});
 
@@ -291,6 +295,31 @@ router.get('/@:user/pages/:page', async ctx => {
 		} else {
 			ctx.set('Cache-Control', 'private, max-age=0, must-revalidate');
 		}
+
+		return;
+	}
+
+	ctx.status = 404;
+});
+
+// Clip
+// TODO: 非publicなclipのハンドリング
+router.get('/clips/:clip', async ctx => {
+	const clip = await Clips.findOne({
+		id: ctx.params.clip,
+	});
+
+	if (clip) {
+		const _clip = await Clips.pack(clip);
+		const profile = await UserProfiles.findOne(clip.userId).then(ensure);
+		const meta = await fetchMeta();
+		await ctx.render('clip', {
+			clip: _clip,
+			profile,
+			instanceName: meta.name || 'Misskey'
+		});
+
+		ctx.set('Cache-Control', 'public, max-age=180');
 
 		return;
 	}

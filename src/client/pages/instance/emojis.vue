@@ -1,11 +1,14 @@
 <template>
 <div class="mk-instance-emojis">
 	<div class="_section" style="padding: 0;">
-		<MkTab v-model:value="tab" :items="[{ label: $t('local'), value: 'local' }, { label: $t('remote'), value: 'remote' }]"/>
+		<MkTab v-model:value="tab">
+			<option value="local">{{ $t('local') }}</option>
+			<option value="remote">{{ $t('remote') }}</option>
+		</MkTab>
 	</div>
 
 	<div class="_section">
-		<div class="_content local" v-if="tab === 'local'">
+		<div class="local" v-if="tab === 'local'">
 			<MkButton primary @click="add" style="margin: 0 auto var(--margin) auto;"><Fa :icon="faPlus"/> {{ $t('addEmoji') }}</MkButton>
 			<MkInput v-model:value="query" :debounce="true" type="search"><template #icon><Fa :icon="faSearch"/></template><span>{{ $t('search') }}</span></MkInput>
 			<MkPagination :pagination="pagination" ref="emojis">
@@ -15,10 +18,8 @@
 						<button class="emoji _panel _button" v-for="emoji in items" :key="emoji.id" @click="edit(emoji)">
 							<img :src="emoji.url" class="img" :alt="emoji.name"/>
 							<div class="body">
-								<span class="name">{{ emoji.name }}</span>
-								<span class="info">
-									<span class="category">{{ emoji.category }}</span>
-								</span>
+								<div class="name">{{ emoji.name }}</div>
+								<div class="info">{{ emoji.category }}</div>
 							</div>
 						</button>
 					</div>
@@ -26,7 +27,7 @@
 			</MkPagination>
 		</div>
 
-		<div class="_content remote" v-else-if="tab === 'remote'">
+		<div class="remote" v-else-if="tab === 'remote'">
 			<MkInput v-model:value="queryRemote" :debounce="true" type="search"><template #icon><Fa :icon="faSearch"/></template><span>{{ $t('search') }}</span></MkInput>
 			<MkInput v-model:value="host" :debounce="true"><span>{{ $t('host') }}</span></MkInput>
 			<MkPagination :pagination="remotePagination" ref="remoteEmojis">
@@ -36,8 +37,8 @@
 						<div class="emoji _panel _button" v-for="emoji in items" :key="emoji.id" @click="remoteMenu(emoji, $event)">
 							<img :src="emoji.url" class="img" :alt="emoji.name"/>
 							<div class="body">
-								<span class="name">{{ emoji.name }}</span>
-								<span class="info">{{ emoji.host }}</span>
+								<div class="name">{{ emoji.name }}</div>
+								<div class="info">{{ emoji.host }}</div>
 							</div>
 						</div>
 					</div>
@@ -70,10 +71,8 @@ export default defineComponent({
 	data() {
 		return {
 			INFO: {
-				header: [{
-					title: this.$t('customEmojis'),
-					icon: faLaugh
-				}],
+				title: this.$t('customEmojis'),
+				icon: faLaugh,
 				action: {
 					icon: faPlus,
 					handler: this.add
@@ -85,14 +84,14 @@ export default defineComponent({
 			host: '',
 			pagination: {
 				endpoint: 'admin/emoji/list',
-				limit: 15,
+				limit: 30,
 				params: computed(() => ({
 					query: (this.query && this.query !== '') ? this.query : null
 				}))
 			},
 			remotePagination: {
 				endpoint: 'admin/emoji/list-remote',
-				limit: 15,
+				limit: 30,
 				params: computed(() => ({
 					query: (this.queryRemote && this.queryRemote !== '') ? this.queryRemote : null,
 					host: (this.host && this.host !== '') ? this.host : null
@@ -115,8 +114,8 @@ export default defineComponent({
 			os.promiseDialog(promise);
 		},
 
-		async edit(emoji) {
-			os.popup(await import('./emoji-edit-dialog.vue'), {
+		edit(emoji) {
+			os.popup(import('./emoji-edit-dialog.vue'), {
 				emoji: emoji
 			}, {
 				done: result => {
@@ -182,13 +181,14 @@ export default defineComponent({
 						overflow: hidden;
 
 						> .name {
-							display: block;
 							text-overflow: ellipsis;
 							overflow: hidden;
 						}
 
 						> .info {
 							opacity: 0.5;
+							text-overflow: ellipsis;
+							overflow: hidden;
 						}
 					}
 				}
@@ -222,14 +222,12 @@ export default defineComponent({
 						overflow: hidden;
 
 						> .name {
-							display: block;
 							text-overflow: ellipsis;
 							overflow: hidden;
 						}
 
 						> .info {
 							opacity: 0.5;
-							display: block;
 							text-overflow: ellipsis;
 							overflow: hidden;
 						}

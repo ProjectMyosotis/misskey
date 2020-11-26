@@ -4,7 +4,7 @@
 		<div class="_content">
 			<ul>
 				<li v-for="doc in docs" :key="doc.path">
-					<router-link :to="`/docs/${doc.path}`">{{ doc.title }}</router-link>
+					<MkA :to="`/docs/${doc.path}`">{{ doc.title }}</MkA>
 				</li>
 			</ul>
 		</div>
@@ -21,10 +21,8 @@ export default defineComponent({
 	data() {
 		return {
 			INFO: {
-				header: [{
-					title: this.$t('help'),
-					icon: faQuestionCircle
-				}],
+				title: this.$t('help'),
+				icon: faQuestionCircle
 			},
 			docs: [],
 			faQuestionCircle

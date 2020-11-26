@@ -109,12 +109,13 @@ export class UserProfile {
 	@Column('boolean', {
 		default: false,
 	})
-	public autoWatch: boolean;
+	public autoAcceptFollowed: boolean;
 
 	@Column('boolean', {
 		default: false,
+		comment: 'Whether reject index by crawler.'
 	})
-	public autoAcceptFollowed: boolean;
+	public noCrawle: boolean;
 
 	@Column('boolean', {
 		default: false,

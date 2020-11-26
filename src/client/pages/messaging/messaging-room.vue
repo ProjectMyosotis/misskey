@@ -38,6 +38,7 @@ import parseAcct from '../../../misc/acct/parse';
 import { isBottom, onScrollBottom, scroll } from '@/scripts/scroll';
 import * as os from '@/os';
 import { popout } from '@/scripts/popout';
+import * as sound from '@/scripts/sound';
 
 const Component = defineComponent({
 	components: {
@@ -62,19 +63,15 @@ const Component = defineComponent({
 	data() {
 		return {
 			INFO: computed(() => !this.fetching ? this.user ? {
-				header: [{
-					userName: this.user,
-					avatar: this.user,
-				}],
+				userName: this.user,
+				avatar: this.user,
 				action: {
 					icon: faEllipsisH,
 					handler: this.menu,
 				},
 			} : {
-				header: [{
-					title: this.group.name,
-					icon: faUsers
-				}],
+				title: this.group.name,
+				icon: faUsers,
 				action: {
 					icon: faEllipsisH,
 					handler: this.menu,
@@ -222,7 +219,7 @@ const Component = defineComponent({
 		},
 
 		onMessage(message) {
-			os.sound('chat');
+			sound.play('chat');
 
 			const _isBottom = isBottom(this.$el, 64);
 
@@ -311,20 +308,20 @@ const Component = defineComponent({
 		},
 
 		menu(ev) {
-			const url = this.groupId ? `/my/messaging/group/${this.groupId}` : `/my/messaging/${this.userAcct}`;
+			const path = this.groupId ? `/my/messaging/group/${this.groupId}` : `/my/messaging/${this.userAcct}`;
 
 			os.modalMenu([this.inWindow ? undefined : {
 				text: this.$t('openInWindow'),
 				icon: faWindowMaximize,
 				action: () => {
-					os.pageWindow(url, Component, this.$props);
+					os.pageWindow(path);
 					this.$router.back();
 				},
 			}, this.inWindow ? undefined : {
 				text: this.$t('popout'),
 				icon: faExternalLinkAlt,
 				action: () => {
-					popout(url);
+					popout(path);
 					this.$router.back();
 				},
 			}], ev.currentTarget || ev.target);

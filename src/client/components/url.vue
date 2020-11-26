@@ -1,5 +1,5 @@
 <template>
-<component :is="self ? 'router-link' : 'a'" class="ieqqeuvs _link" :[attr]="self ? url.substr(local.length) : url" :rel="rel" :target="target"
+<component :is="self ? 'MkA' : 'a'" class="ieqqeuvs _link" :[attr]="self ? url.substr(local.length) : url" :rel="rel" :target="target"
 	@mouseover="onMouseover"
 	@mouseleave="onMouseleave"
 >
@@ -71,7 +71,7 @@ export default defineComponent({
 			if (!document.body.contains(this.$el)) return;
 			if (this.close) return;
 
-			const { dispose } = os.popup(await import('@/components/url-preview-popup.vue'), {
+			const { dispose } = await os.popup(import('@/components/url-preview-popup.vue'), {
 				url: this.url,
 				source: this.$el
 			});
