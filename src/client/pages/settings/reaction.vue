@@ -3,16 +3,18 @@
 	<div class="_formItem">
 		<div class="_formLabel">{{ $t('reactionSettingDescription') }}</div>
 		<div class="_formPanel">
-			<XDraggable class="zoaiodol" :list="reactions" animation="150" delay="100" delay-on-touch-only="true">
-				<button class="_button item" v-for="reaction in reactions" :key="reaction" @click="remove(reaction, $event)">
-					<MkEmoji :emoji="reaction" :normal="true"/>
-				</button>
+			<XDraggable class="zoaiodol" v-model="reactions" :item-key="item => item" animation="150" delay="100" delay-on-touch-only="true">
+				<template #item="{element}">
+					<button class="_button item" @click="remove(element, $event)">
+						<MkEmoji :emoji="element" :normal="true"/>
+					</button>
+				</template>
 				<template #footer>
-					<button>a</button>
+					<button class="_button add" @click="chooseEmoji"><Fa :icon="faPlus"/></button>
 				</template>
 			</XDraggable>
 		</div>
-		<div class="_formCaption">{{ $t('reactionSettingDescription2') }} <button class="_textButton" @click="chooseEmoji">{{ $t('chooseEmoji') }}</button></div>
+		<div class="_formCaption">{{ $t('reactionSettingDescription2') }} <button class="_textButton" @click="preview">{{ $t('preview') }}</button></div>
 	</div>
 
 	<FormRadios v-model="reactionPickerWidth">
@@ -35,14 +37,14 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { faLaugh, faSave, faEye } from '@fortawesome/free-regular-svg-icons';
-import { faUndo } from '@fortawesome/free-solid-svg-icons';
-import { VueDraggableNext } from 'vue-draggable-next';
+import { faUndo, faPlus } from '@fortawesome/free-solid-svg-icons';
+import XDraggable from 'vuedraggable';
 import FormInput from '@/components/form/input.vue';
 import FormRadios from '@/components/form/radios.vue';
 import FormBase from '@/components/form/base.vue';
 import FormButton from '@/components/form/button.vue';
-import { defaultSettings } from '@/store';
 import * as os from '@/os';
+import { defaultStore } from '@/store';
 
 export default defineComponent({
 	components: {
@@ -50,7 +52,7 @@ export default defineComponent({
 		FormButton,
 		FormBase,
 		FormRadios,
-		XDraggable: VueDraggableNext,
+		XDraggable,
 	},
 
 	emits: ['info'],
@@ -65,24 +67,14 @@ export default defineComponent({
 					handler: this.preview
 				}
 			},
-			reactions: JSON.parse(JSON.stringify(this.$store.state.settings.reactions)),
-			faLaugh, faSave, faEye, faUndo
+			reactions: JSON.parse(JSON.stringify(this.$store.state.reactions)),
+			faLaugh, faSave, faEye, faUndo, faPlus
 		}
 	},
 
 	computed: {
-		useFullReactionPicker: {
-			get() { return this.$store.state.device.useFullReactionPicker; },
-			set(value) { this.$store.commit('device/set', { key: 'useFullReactionPicker', value: value }); }
-		},
-		reactionPickerWidth: {
-			get() { return this.$store.state.device.reactionPickerWidth; },
-			set(value) { this.$store.commit('device/set', { key: 'reactionPickerWidth', value: value }); }
-		},
-		reactionPickerHeight: {
-			get() { return this.$store.state.device.reactionPickerHeight; },
-			set(value) { this.$store.commit('device/set', { key: 'reactionPickerHeight', value: value }); }
-		},
+		reactionPickerWidth: defaultStore.makeGetterSetter('reactionPickerWidth'),
+		reactionPickerHeight: defaultStore.makeGetterSetter('reactionPickerHeight'),
 	},
 
 	watch: {
@@ -100,7 +92,7 @@ export default defineComponent({
 
 	methods: {
 		save() {
-			this.$store.dispatch('settings/set', { key: 'reactions', value: this.reactions });
+			this.$store.set('reactions', this.reactions);
 		},
 
 		remove(reaction, ev) {
@@ -127,7 +119,7 @@ export default defineComponent({
 			});
 			if (canceled) return;
 
-			this.reactions = JSON.parse(JSON.stringify(defaultSettings.reactions));
+			this.reactions = JSON.parse(JSON.stringify(this.$store.def.reactions.default));
 		},
 
 		chooseEmoji(ev) {
@@ -151,6 +143,11 @@ export default defineComponent({
 		display: inline-block;
 		padding: 8px;
 		cursor: move;
+	}
+
+	> .add {
+		display: inline-block;
+		padding: 8px;
 	}
 }
 </style>

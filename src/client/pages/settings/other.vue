@@ -1,12 +1,14 @@
 <template>
 <FormBase>
-	<FormSwitch :value="$store.state.i.injectFeaturedNote" @update:value="onChangeInjectFeaturedNote">
+	<FormSwitch :value="$i.injectFeaturedNote" @update:value="onChangeInjectFeaturedNote">
 		{{ $t('showFeaturedNotesInTimeline') }}
 	</FormSwitch>
 
 	<FormLink to="/settings/account-info">{{ $t('accountInfo') }}</FormLink>
+	<FormLink to="/settings/experimental-features">{{ $t('experimentalFeatures') }}</FormLink>
 
 	<FormGroup>
+		<template #label>{{ $t('developer') }}</template>
 		<FormSwitch v-model:value="debug" @update:value="changeDebug">
 			DEBUG MODE
 		</FormSwitch>

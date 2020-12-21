@@ -1,8 +1,12 @@
 <template>
-<FormBase class="llvierxe">
-	<div class="header _formItem" :style="{ backgroundImage: $store.state.i.bannerUrl ? `url(${ $store.state.i.bannerUrl })` : null }" @click="changeBanner">
-		<MkAvatar class="avatar" :user="$store.state.i" :disable-preview="true" :disable-link="true" @click.stop="changeAvatar"/>
-	</div>
+<FormBase>
+	<FormGroup>
+		<div class="_formItem _formPanel llvierxe" :style="{ backgroundImage: $i.bannerUrl ? `url(${ $i.bannerUrl })` : null }">
+			<MkAvatar class="avatar" :user="$i"/>
+		</div>
+		<FormButton @click="changeAvatar" primary>{{ $t('_profile.changeAvatar') }}</FormButton>
+		<FormButton @click="changeBanner" primary>{{ $t('_profile.changeBanner') }}</FormButton>
+	</FormGroup>
 
 	<FormInput v-model:value="name" :max="30">
 		<span>{{ $t('_profile.name') }}</span>
@@ -96,24 +100,24 @@ export default defineComponent({
 	},
 
 	created() {
-		this.name = this.$store.state.i.name;
-		this.description = this.$store.state.i.description;
-		this.location = this.$store.state.i.location;
-		this.birthday = this.$store.state.i.birthday;
-		this.avatarId = this.$store.state.i.avatarId;
-		this.bannerId = this.$store.state.i.bannerId;
-		this.isBot = this.$store.state.i.isBot;
-		this.isCat = this.$store.state.i.isCat;
-		this.alwaysMarkNsfw = this.$store.state.i.alwaysMarkNsfw;
+		this.name = this.$i.name;
+		this.description = this.$i.description;
+		this.location = this.$i.location;
+		this.birthday = this.$i.birthday;
+		this.avatarId = this.$i.avatarId;
+		this.bannerId = this.$i.bannerId;
+		this.isBot = this.$i.isBot;
+		this.isCat = this.$i.isCat;
+		this.alwaysMarkNsfw = this.$i.alwaysMarkNsfw;
 
-		this.fieldName0 = this.$store.state.i.fields[0] ? this.$store.state.i.fields[0].name : null;
-		this.fieldValue0 = this.$store.state.i.fields[0] ? this.$store.state.i.fields[0].value : null;
-		this.fieldName1 = this.$store.state.i.fields[1] ? this.$store.state.i.fields[1].name : null;
-		this.fieldValue1 = this.$store.state.i.fields[1] ? this.$store.state.i.fields[1].value : null;
-		this.fieldName2 = this.$store.state.i.fields[2] ? this.$store.state.i.fields[2].name : null;
-		this.fieldValue2 = this.$store.state.i.fields[2] ? this.$store.state.i.fields[2].value : null;
-		this.fieldName3 = this.$store.state.i.fields[3] ? this.$store.state.i.fields[3].name : null;
-		this.fieldValue3 = this.$store.state.i.fields[3] ? this.$store.state.i.fields[3].value : null;
+		this.fieldName0 = this.$i.fields[0] ? this.$i.fields[0].name : null;
+		this.fieldValue0 = this.$i.fields[0] ? this.$i.fields[0].value : null;
+		this.fieldName1 = this.$i.fields[1] ? this.$i.fields[1].name : null;
+		this.fieldValue1 = this.$i.fields[1] ? this.$i.fields[1].value : null;
+		this.fieldName2 = this.$i.fields[2] ? this.$i.fields[2].name : null;
+		this.fieldValue2 = this.$i.fields[2] ? this.$i.fields[2].value : null;
+		this.fieldName3 = this.$i.fields[3] ? this.$i.fields[3].name : null;
+		this.fieldValue3 = this.$i.fields[3] ? this.$i.fields[3].value : null;
 	},
 
 	mounted() {
@@ -223,10 +227,10 @@ export default defineComponent({
 				alwaysMarkNsfw: !!this.alwaysMarkNsfw,
 			}).then(i => {
 				this.saving = false;
-				this.$store.state.i.avatarId = i.avatarId;
-				this.$store.state.i.avatarUrl = i.avatarUrl;
-				this.$store.state.i.bannerId = i.bannerId;
-				this.$store.state.i.bannerUrl = i.bannerUrl;
+				this.$i.avatarId = i.avatarId;
+				this.$i.avatarUrl = i.avatarUrl;
+				this.$i.bannerId = i.bannerId;
+				this.$i.bannerUrl = i.bannerUrl;
 
 				if (notify) {
 					os.success();
@@ -245,30 +249,26 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .llvierxe {
-	> .header {
-		position: relative;
-		height: 150px;
-		overflow: hidden;
-		background-size: cover;
-		background-position: center;
-		border-radius: 5px;
-		border: solid 1px var(--divider);
-		box-sizing: border-box;
-		cursor: pointer;
+	position: relative;
+	height: 150px;
+	background-size: cover;
+	background-position: center;
 
-		> .avatar {
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			display: block;
-			width: 72px;
-			height: 72px;
-			margin: auto;
-			cursor: pointer;
-			box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.5);
-		}
+	> * {
+		pointer-events: none;
+	}
+
+	> .avatar {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: block;
+		width: 72px;
+		height: 72px;
+		margin: auto;
+		box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.5);
 	}
 }
 </style>

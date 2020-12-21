@@ -1,13 +1,7 @@
 <template>
 <div class="mk-app">
-	<div class="banner" v-if="$route.path === '/'" :style="{ backgroundImage: `url(${ $store.state.instance.meta.bannerUrl })` }">
+	<div class="banner" v-if="$route.path === '/'" :style="{ backgroundImage: `url(${ $instance.bannerUrl })` }">
 		<div>
-			<header>
-				<MkA class="link" to="/">{{ $t('home') }}</MkA>
-				<MkA class="link" to="/announcements">{{ $t('announcements') }}</MkA>
-				<MkA class="link" to="/channels">{{ $t('channel') }}</MkA>
-				<MkA class="link" to="/about">{{ $t('aboutX', { x: instanceName }) }}</MkA>
-			</header>
 			<h1 v-if="meta"><img class="logo" v-if="meta.logoImageUrl" :src="meta.logoImageUrl"><span v-else class="text">{{ instanceName }}</span></h1>
 			<div class="about" v-if="meta">
 				<div class="desc" v-html="meta.description || $t('introMisskey')"></div>
@@ -18,18 +12,8 @@
 			</div>
 		</div>
 	</div>
-	<div class="banner-mini" v-else :style="{ backgroundImage: `url(${ $store.state.instance.meta.bannerUrl })` }">
+	<div class="banner-mini" v-else :style="{ backgroundImage: `url(${ $instance.bannerUrl })` }">
 		<div>
-			<header>
-				<MkA class="link" to="/">{{ $t('home') }}</MkA>
-				<MkA class="link" to="/announcements">{{ $t('announcements') }}</MkA>
-				<MkA class="link" to="/channels">{{ $t('channel') }}</MkA>
-				<MkA class="link" to="/about">{{ $t('aboutX', { x: instanceName }) }}</MkA>
-				<div class="action">
-					<button class="_button primary" @click="signup()">{{ $t('signup') }}</button>
-					<button class="_button" @click="signin()">{{ $t('login') }}</button>
-				</div>
-			</header>
 			<h1 v-if="meta"><img class="logo" v-if="meta.logoImageUrl" :src="meta.logoImageUrl"><span v-else class="text">{{ instanceName }}</span></h1>
 		</div>
 	</div>
@@ -41,7 +25,7 @@
 			</header>
 			<main ref="main">
 				<router-view v-slot="{ Component }">
-					<transition :name="$store.state.device.animation ? 'page' : ''" mode="out-in" @enter="onTransition">
+					<transition :name="$store.state.animation ? 'page' : ''" mode="out-in" @enter="onTransition">
 						<component :is="Component" :ref="changePage"/>
 					</transition>
 				</router-view>
@@ -62,10 +46,9 @@ import { host, instanceName } from '@/config';
 import { search } from '@/scripts/search';
 import * as os from '@/os';
 import MkPagination from '@/components/ui/pagination.vue';
-import XSigninDialog from '@/components/signin-dialog.vue';
-import XSignupDialog from '@/components/signup-dialog.vue';
 import MkButton from '@/components/ui/button.vue';
-import XHeader from '../_common_/header.vue';
+import XHeader from './header.vue';
+import { ColdDeviceStorage } from '@/store';
 
 const DESKTOP_THRESHOLD = 1100;
 
@@ -96,8 +79,8 @@ export default defineComponent({
 		keymap(): any {
 			return {
 				'd': () => {
-					if (this.$store.state.device.syncDeviceDarkMode) return;
-					this.$store.commit('device/set', { key: 'darkMode', value: !this.$store.state.device.darkMode });
+					if (ColdDeviceStorage.get('syncDeviceDarkMode')) return;
+					this.$store.set('darkMode', !this.$store.state.darkMode);
 				},
 				's': search,
 				'h|/': this.help
@@ -150,18 +133,6 @@ export default defineComponent({
 		onTransition() {
 			if (window._scroll) window._scroll();
 		},
-
-		signin() {
-			os.popup(XSigninDialog, {
-				autoSet: true
-			}, {}, 'closed');
-		},
-
-		signup() {
-			os.popup(XSignupDialog, {
-				autoSet: true
-			}, {}, 'closed');
-		}
 	}
 });
 </script>
@@ -264,59 +235,6 @@ export default defineComponent({
 	}
 
 	> .main {
-		> header {
-			position: relative;
-			z-index: 1;
-			background: var(--panel);
-			padding: 0 32px;
-			text-align: left;
-			overflow: auto;
-			white-space: nowrap;
-
-			> .link {
-				display: inline-block;
-				line-height: 60px;
-				padding: 0 0.7em;
-
-				&.MkA-active {
-					box-shadow: 0 -2px 0 0 var(--accent) inset;
-				}
-			}
-		}
-
-		> .banner {
-			position: relative;
-			width: 100%;
-			height: 200px;
-			background-size: cover;
-			background-position: center;
-
-			&.asBg {
-				position: absolute;
-				left: 0;
-				height: 320px;
-			}
-
-			&:after {
-				content: "";
-				display: block;
-				position: absolute;
-				bottom: 0;
-				left: 0;
-				width: 100%;
-				height: 64px;
-				background: linear-gradient(transparent, var(--bg));
-			}
-
-			> h1 {
-				margin: 0;
-				text-align: center;
-				color: #fff;
-				text-shadow: 0 0 8px #000;
-				line-height: 200px;
-			}
-		}
-
 		> .contents {
 			position: relative;
 			z-index: 1;
@@ -326,14 +244,6 @@ export default defineComponent({
 				top: 0;
 				left: 0;
 				z-index: 1000;
-				height: 60px;
-				width: 100%;
-				line-height: 60px;
-				text-align: center;
-				-webkit-backdrop-filter: blur(32px);
-				backdrop-filter: blur(32px);
-				background-color: var(--header);
-				border-bottom: 1px solid var(--divider);
 			}
 
 			> .powered-by {

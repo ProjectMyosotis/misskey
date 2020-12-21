@@ -1,5 +1,5 @@
 <template>
-<transition :name="$store.state.device.animation ? 'zoom' : ''" appear>
+<transition :name="$store.state.animation ? 'zoom' : ''" appear>
 	<div class="mjndxjcg">
 		<img src="https://xn--931a.moe/assets/error.jpg" class="_ghost"/>
 		<p><Fa :icon="faExclamationTriangle"/> {{ $t('somethingHappened') }}</p>
@@ -11,7 +11,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import MkButton from './ui/button.vue';
+import MkButton from '@/components/ui/button.vue';
 
 export default defineComponent({
 	components: {
