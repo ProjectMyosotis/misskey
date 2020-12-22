@@ -33,7 +33,7 @@ jobs:
                     apk update && apk add jq
                     docker tag projectmyosotis/misskey projectmyosotis/misskey:$(cat package.json | jq -r .version)
                     docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-                    docker push -a projectmyosotis/misskey
+                    docker push projectmyosotis/misskey
                    else
                     echo -e '\033[0;33mAborted deploying to Docker Hub\033[0;39m'
                   fi
