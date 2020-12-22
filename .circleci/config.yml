@@ -39,7 +39,7 @@ jobs:
                   fi
 workflows:
   version: 2
-  build-and-test:
+  docker:
     jobs:
       - docker:
           name: auto-build
