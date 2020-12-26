@@ -5,7 +5,7 @@
 	@dragleave="onDragleave"
 	@drop.prevent.stop="onDrop"
 	v-hotkey="keymap"
-	:style="{ width: `${width}px` }"
+	:style="{ '--deckColumnHeaderHeight': deckStore.reactiveState.columnHeaderHeight.value + 'px' }"
 >
 	<header :class="{ indicated }"
 		draggable="true"
@@ -14,7 +14,7 @@
 		@dragend="onDragend"
 		@contextmenu.prevent.stop="onContextmenu"
 	>
-		<button class="toggleActive _button" @click="toggleActive" v-if="isStacked">
+		<button class="toggleActive _button" @click="toggleActive" v-if="isStacked && !isMainColumn">
 			<template v-if="active"><Fa :icon="faAngleUp"/></template>
 			<template v-else><Fa :icon="faAngleDown"/></template>
 		</button>
@@ -35,7 +35,8 @@ import { defineComponent } from 'vue';
 import { faArrowUp, faArrowDown, faAngleUp, faAngleDown, faCaretDown, faArrowRight, faArrowLeft, faPencilAlt } from '@fortawesome/free-solid-svg-icons';
 import { faWindowMaximize, faTrashAlt, faWindowRestore } from '@fortawesome/free-regular-svg-icons';
 import * as os from '@/os';
-import { renameColumn, swapLeftColumn, swapRightColumn, swapUpColumn, swapDownColumn, stackLeftColumn, popRightColumn, removeColumn, swapColumn } from './deck-store';
+import { updateColumn, swapLeftColumn, swapRightColumn, swapUpColumn, swapDownColumn, stackLeftColumn, popRightColumn, removeColumn, swapColumn } from './deck-store';
+import { deckStore } from './deck-store';
 
 export default defineComponent({
 	props: {
@@ -68,6 +69,7 @@ export default defineComponent({
 
 	data() {
 		return {
+			deckStore,
 			active: true,
 			dragging: false,
 			draghover: false,
@@ -78,11 +80,7 @@ export default defineComponent({
 
 	computed: {
 		isMainColumn(): boolean {
-			return this.column == null;
-		},
-
-		width(): number {
-			return this.isMainColumn ? 350 : this.column.width;
+			return this.column.type === 'main';
 		},
 
 		keymap(): any {
@@ -106,17 +104,13 @@ export default defineComponent({
 	},
 
 	mounted() {
-		if (!this.isMainColumn) {
-			os.deckGlobalEvents.on('column.dragStart', this.onOtherDragStart);
-			os.deckGlobalEvents.on('column.dragEnd', this.onOtherDragEnd);
-		}
+		os.deckGlobalEvents.on('column.dragStart', this.onOtherDragStart);
+		os.deckGlobalEvents.on('column.dragEnd', this.onOtherDragEnd);
 	},
 
 	beforeUnmount() {
-		if (!this.isMainColumn) {
-			os.deckGlobalEvents.off('column.dragStart', this.onOtherDragStart);
-			os.deckGlobalEvents.off('column.dragEnd', this.onOtherDragEnd);
-		}
+		os.deckGlobalEvents.off('column.dragStart', this.onOtherDragStart);
+		os.deckGlobalEvents.off('column.dragEnd', this.onOtherDragEnd);
 	},
 
 	methods: {
@@ -136,58 +130,67 @@ export default defineComponent({
 		getMenu() {
 			const items = [{
 				icon: faPencilAlt,
-				text: this.$t('rename'),
-				action: () => {
-					os.dialog({
-						title: this.$t('rename'),
-						input: {
-							default: this.column.name,
-							allowEmpty: false
+				text: this.$ts.edit,
+				action: async () => {
+					const { canceled, result } = await os.form(this.column.name, {
+						name: {
+							type: 'string',
+							label: this.$ts.name,
+							default: this.column.name
+						},
+						width: {
+							type: 'number',
+							label: this.$ts.width,
+							default: this.column.width
+						},
+						flexible: {
+							type: 'boolean',
+							label: this.$ts.flexible,
+							default: this.column.flexible
 						}
-					}).then(({ canceled, result: name }) => {
-						if (canceled) return;
-						renameColumn(this.column.id, name);
 					});
+					if (canceled) return;
+					updateColumn(this.column.id, result);
 				}
 			}, null, {
 				icon: faArrowLeft,
-				text: this.$t('_deck.swapLeft'),
+				text: this.$ts._deck.swapLeft,
 				action: () => {
 					swapLeftColumn(this.column.id);
 				}
 			}, {
 				icon: faArrowRight,
-				text: this.$t('_deck.swapRight'),
+				text: this.$ts._deck.swapRight,
 				action: () => {
 					swapRightColumn(this.column.id);
 				}
 			}, this.isStacked ? {
 				icon: faArrowUp,
-				text: this.$t('_deck.swapUp'),
+				text: this.$ts._deck.swapUp,
 				action: () => {
 					swapUpColumn(this.column.id);
 				}
 			} : undefined, this.isStacked ? {
 				icon: faArrowDown,
-				text: this.$t('_deck.swapDown'),
+				text: this.$ts._deck.swapDown,
 				action: () => {
 					swapDownColumn(this.column.id);
 				}
 			} : undefined, null, {
 				icon: faWindowRestore,
-				text: this.$t('_deck.stackLeft'),
+				text: this.$ts._deck.stackLeft,
 				action: () => {
 					stackLeftColumn(this.column.id);
 				}
 			}, this.isStacked ? {
 				icon: faWindowMaximize,
-				text: this.$t('_deck.popRight'),
+				text: this.$ts._deck.popRight,
 				action: () => {
 					popRightColumn(this.column.id);
 				}
 			} : undefined, null, {
 				icon: faTrashAlt,
-				text: this.$t('remove'),
+				text: this.$ts.remove,
 				action: () => {
 					removeColumn(this.column.id);
 				}
@@ -203,8 +206,7 @@ export default defineComponent({
 		},
 
 		onContextmenu(e) {
-			if (this.isMainColumn) return;
-			this.showMenu();
+			os.contextMenu(this.getMenu(), e);
 		},
 
 		showMenu() {
@@ -219,12 +221,6 @@ export default defineComponent({
 		},
 
 		onDragstart(e) {
-			// メインカラムはドラッグさせない
-			if (this.isMainColumn) {
-				e.preventDefault();
-				return;
-			}
-
 			e.dataTransfer.effectAllowed = 'move';
 			e.dataTransfer.setData(_DATA_TRANSFER_DECK_COLUMN_, this.column.id);
 			this.dragging = true;
@@ -235,12 +231,6 @@ export default defineComponent({
 		},
 
 		onDragover(e) {
-			// メインカラムにはドロップさせない
-			if (this.isMainColumn) {
-				e.dataTransfer.dropEffect = 'none';
-				return;
-			}
-
 			// 自分自身がドラッグされている場合
 			if (this.dragging) {
 				// 自分自身にはドロップさせない
@@ -274,8 +264,6 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .dnpfarvg {
-	$header-height: 42px;
-
 	--section-padding: 10px;
 
 	height: 100%;
@@ -309,8 +297,8 @@ export default defineComponent({
 	}
 
 	&:not(.active) {
-		flex-basis: $header-height;
-		min-height: $header-height;
+		flex-basis: var(--deckColumnHeaderHeight);
+		min-height: var(--deckColumnHeaderHeight);
 
 		> header.indicated {
 			box-shadow: 4px 0px var(--accent) inset;
@@ -342,8 +330,8 @@ export default defineComponent({
 		position: relative;
 		display: flex;
 		z-index: 2;
-		line-height: $header-height;
-		height: $header-height;
+		line-height: var(--deckColumnHeaderHeight);
+		height: var(--deckColumnHeaderHeight);
 		padding: 0 16px;
 		font-size: 0.9em;
 		color: var(--panelHeaderFg);
@@ -375,8 +363,8 @@ export default defineComponent({
 		> .action > *,
 		> .menu {
 			z-index: 1;
-			width: $header-height;
-			line-height: $header-height;
+			width: var(--deckColumnHeaderHeight);
+			line-height: var(--deckColumnHeaderHeight);
 			font-size: 16px;
 			color: var(--faceTextButton);
 
@@ -408,7 +396,7 @@ export default defineComponent({
 	}
 
 	> div {
-		height: calc(100% - #{$header-height});
+		height: calc(100% - var(--deckColumnHeaderHeight));
 		overflow: auto;
 		overflow-x: hidden;
 		-webkit-overflow-scrolling: touch;
