@@ -45,7 +45,7 @@ gulp.task('build:copy:locales', cb => {
 });
 
 gulp.task('build:client:script', () => {
-	return gulp.src(['./src/server/web/boot.js'])
+	return gulp.src(['./src/server/web/boot.js', './src/server/web/bios.js', './src/server/web/cli.js'])
 		.pipe(replace('VERSION', JSON.stringify(meta.version)))
 		.pipe(replace('LANGS', JSON.stringify(Object.keys(locales))))
 		.pipe(terser({
@@ -55,8 +55,10 @@ gulp.task('build:client:script', () => {
 });
 
 gulp.task('build:client:style', () => {
-	return gulp.src(['./src/server/web/style.css'])
-		.pipe(cssnano())
+	return gulp.src(['./src/server/web/style.css', './src/server/web/bios.css', './src/server/web/cli.css'])
+		.pipe(cssnano({
+			zindex: false
+		}))
 		.pipe(gulp.dest('./built/server/web/'));
 });
 
