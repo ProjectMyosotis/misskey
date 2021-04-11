@@ -135,18 +135,18 @@
 import { defineComponent, defineAsyncComponent } from 'vue';
 import { faLayerGroup, faBars, faHome, faCircle, faWindowMaximize, faColumns, faPencilAlt, faShareAlt, faSatelliteDish, faListUl, faSatellite, faCog, faSearch, faPlus, faStar, faAt, faLink, faEllipsisH, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { faBell, faStar as farStar, faEnvelope, faComments, faCalendarAlt } from '@fortawesome/free-regular-svg-icons';
-import { instanceName, url } from '@/config';
-import XSidebar from '@/components/sidebar.vue';
+import { instanceName, url } from '@client/config';
+import XSidebar from '@client/ui/_common_/sidebar.vue';
 import XWidgets from './widgets.vue';
 import XCommon from '../_common_/common.vue';
 import XSide from './side.vue';
 import XTimeline from './timeline.vue';
 import XHeaderClock from './header-clock.vue';
-import * as os from '@/os';
-import { router } from '@/router';
-import { sidebarDef } from '@/sidebar';
-import { search } from '@/scripts/search';
-import copyToClipboard from '@/scripts/copy-to-clipboard';
+import * as os from '@client/os';
+import { router } from '@client/router';
+import { sidebarDef } from '@client/sidebar';
+import { search } from '@client/scripts/search';
+import copyToClipboard from '@client/scripts/copy-to-clipboard';
 import { store } from './store';
 
 export default defineComponent({
@@ -354,7 +354,7 @@ export default defineComponent({
 		flex-direction: column;
 		width: 250px;
 		height: 100vh;
-		border-right: solid 1px var(--divider);
+		border-right: solid 0.5px var(--divider);
 
 		> .header, > .footer {
 			$padding: 8px;
@@ -367,11 +367,11 @@ export default defineComponent({
 			user-select: none;
 
 			&.header {
-				border-bottom: solid 1px var(--divider);
+				border-bottom: solid 0.5px var(--divider);
 			}
 
 			&.footer {
-				border-top: solid 1px var(--divider);
+				border-top: solid 0.5px var(--divider);
 			}
 
 			> .left, > .right {
@@ -526,7 +526,7 @@ export default defineComponent({
 			padding: $padding;
 			box-sizing: border-box;
 			background-color: var(--panel);
-			border-bottom: solid 1px var(--divider);
+			border-bottom: solid 0.5px var(--divider);
 			user-select: none;
 
 			> .left {
@@ -599,7 +599,7 @@ export default defineComponent({
 
 	> .side {
 		width: 350px;
-		border-left: solid 1px var(--divider);
+		border-left: solid 0.5px var(--divider);
 
 		&.widgets.sideViewOpening {
 			@media (max-width: 1400px) {

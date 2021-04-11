@@ -27,11 +27,12 @@
 import { defineComponent } from 'vue';
 import { faTerminal, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 import * as JSON5 from 'json5';
-import MkButton from '@/components/ui/button.vue';
-import MkInput from '@/components/ui/input.vue';
-import MkTextarea from '@/components/ui/textarea.vue';
-import MkSwitch from '@/components/ui/switch.vue';
-import * as os from '@/os';
+import MkButton from '@client/components/ui/button.vue';
+import MkInput from '@client/components/ui/input.vue';
+import MkTextarea from '@client/components/ui/textarea.vue';
+import MkSwitch from '@client/components/ui/switch.vue';
+import * as os from '@client/os';
+import * as symbols from '@client/symbols';
 
 export default defineComponent({
 	components: {
@@ -40,7 +41,7 @@ export default defineComponent({
 
 	data() {
 		return {
-			INFO: {
+			[symbols.PAGE_INFO]: {
 				title: 'API console',
 				icon: faTerminal
 			},

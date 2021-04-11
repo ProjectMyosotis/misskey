@@ -13,10 +13,11 @@
 import { defineComponent } from 'vue';
 import { faTimes, faChevronLeft, faExpandAlt, faWindowMaximize, faExternalLinkAlt, faLink } from '@fortawesome/free-solid-svg-icons';
 import XHeader from '../_common_/header.vue';
-import * as os from '@/os';
-import copyToClipboard from '@/scripts/copy-to-clipboard';
-import { resolve } from '@/router';
-import { url } from '@/config';
+import * as os from '@client/os';
+import copyToClipboard from '@client/scripts/copy-to-clipboard';
+import { resolve } from '@client/router';
+import { url } from '@client/config';
+import * as symbols from '@client/symbols';
 
 export default defineComponent({
 	components: {
@@ -51,8 +52,8 @@ export default defineComponent({
 	methods: {
 		changePage(page) {
 			if (page == null) return;
-			if (page.INFO) {
-				this.pageInfo = page.INFO;
+			if (page[symbols.PAGE_INFO]) {
+				this.pageInfo = page[symbols.PAGE_INFO];
 			}
 		},
 
@@ -117,7 +118,7 @@ export default defineComponent({
 .mrajymqm {
 	$header-height: 54px; // TODO: どこかに集約したい
 
-	--section-padding: 16px;
+	--root-margin: 16px;
 	--margin: var(--marginHalf);
 
 	height: 100%;
@@ -137,7 +138,7 @@ export default defineComponent({
 		-webkit-backdrop-filter: blur(32px);
 		backdrop-filter: blur(32px);
 		background-color: var(--header);
-		border-bottom: solid 1px var(--divider);
+		border-bottom: solid 0.5px var(--divider);
 		box-sizing: border-box;
 
 		> ._button {

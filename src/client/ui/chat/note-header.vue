@@ -26,9 +26,9 @@
 import { defineComponent } from 'vue';
 import { faHome, faUnlock, faEnvelope, faMobileAlt, faBookmark, faBiohazard } from '@fortawesome/free-solid-svg-icons';
 import { faBookmark as farBookmark } from '@fortawesome/free-regular-svg-icons';
-import notePage from '@/filters/note';
-import { userPage } from '@/filters/user';
-import * as os from '@/os';
+import notePage from '@client/filters/note';
+import { userPage } from '@client/filters/user';
+import * as os from '@client/os';
 
 export default defineComponent({
 	props: {
@@ -79,7 +79,7 @@ export default defineComponent({
 		margin: 0 .5em 0 0;
 		padding: 1px 6px;
 		font-size: 80%;
-		border: solid 1px var(--divider);
+		border: solid 0.5px var(--divider);
 		border-radius: 3px;
 	}
 

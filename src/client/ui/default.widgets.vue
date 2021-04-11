@@ -10,8 +10,8 @@
 <script lang="ts">
 import { defineComponent, defineAsyncComponent } from 'vue';
 import { faPencilAlt, faPlus, faBars, faTimes, faCheck } from '@fortawesome/free-solid-svg-icons';
-import XWidgets from '@/components/widgets.vue';
-import * as os from '@/os';
+import XWidgets from '@client/components/widgets.vue';
+import * as os from '@client/os';
 
 export default defineComponent({
 	components: {
@@ -61,8 +61,6 @@ export default defineComponent({
 .efzpzdvf {
 	position: sticky;
 	height: min-content;
-	min-height: 100vh;
-	padding: var(--margin) 0;
 	box-sizing: border-box;
 
 	> * {

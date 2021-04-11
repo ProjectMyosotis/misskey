@@ -26,18 +26,19 @@
 import { defineComponent } from 'vue';
 import { faPalette, faDownload, faFolderOpen, faCheck, faTrashAlt, faEye } from '@fortawesome/free-solid-svg-icons';
 import * as JSON5 from 'json5';
-import FormTextarea from '@/components/form/textarea.vue';
-import FormSelect from '@/components/form/select.vue';
-import FormRadios from '@/components/form/radios.vue';
-import FormBase from '@/components/form/base.vue';
-import FormGroup from '@/components/form/group.vue';
-import FormInput from '@/components/form/input.vue';
-import FormButton from '@/components/form/button.vue';
-import { Theme, builtinThemes } from '@/scripts/theme';
-import copyToClipboard from '@/scripts/copy-to-clipboard';
-import * as os from '@/os';
-import { ColdDeviceStorage } from '@/store';
-import { getThemes, removeTheme } from '@/theme-store';
+import FormTextarea from '@client/components/form/textarea.vue';
+import FormSelect from '@client/components/form/select.vue';
+import FormRadios from '@client/components/form/radios.vue';
+import FormBase from '@client/components/form/base.vue';
+import FormGroup from '@client/components/form/group.vue';
+import FormInput from '@client/components/form/input.vue';
+import FormButton from '@client/components/form/button.vue';
+import { Theme, builtinThemes } from '@client/scripts/theme';
+import copyToClipboard from '@client/scripts/copy-to-clipboard';
+import * as os from '@client/os';
+import { ColdDeviceStorage } from '@client/store';
+import { getThemes, removeTheme } from '@client/theme-store';
+import * as symbols from '@client/symbols';
 
 export default defineComponent({
 	components: {
@@ -54,7 +55,7 @@ export default defineComponent({
 	
 	data() {
 		return {
-			INFO: {
+			[symbols.PAGE_INFO]: {
 				title: this.$ts._theme.manage,
 				icon: faFolderOpen
 			},
@@ -82,7 +83,7 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.$emit('info', this.INFO);
+		this.$emit('info', this[symbols.PAGE_INFO]);
 	},
 
 	methods: {
@@ -93,6 +94,8 @@ export default defineComponent({
 
 		uninstall() {
 			removeTheme(this.selectedTheme);
+			this.selectedThemeId = null;
+			os.success();
 		},
 	}
 });

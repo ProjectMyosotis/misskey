@@ -7,7 +7,7 @@
 >
 	<template #header>{{ $ts.signup }}</template>
 
-	<div class="_section">
+	<div class="_root">
 		<XSignup :auto-set="autoSet" @signup="onSignup"/>
 	</div>
 </XModalWindow>
@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import XModalWindow from '@/components/ui/modal-window.vue';
+import XModalWindow from '@client/components/ui/modal-window.vue';
 import XSignup from './signup.vue';
 
 export default defineComponent({

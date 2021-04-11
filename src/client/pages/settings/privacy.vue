@@ -30,12 +30,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { faLockOpen } from '@fortawesome/free-solid-svg-icons';
-import FormSwitch from '@/components/form/switch.vue';
-import FormSelect from '@/components/form/select.vue';
-import FormBase from '@/components/form/base.vue';
-import FormGroup from '@/components/form/group.vue';
-import * as os from '@/os';
-import { defaultStore } from '@/store';
+import FormSwitch from '@client/components/form/switch.vue';
+import FormSelect from '@client/components/form/select.vue';
+import FormBase from '@client/components/form/base.vue';
+import FormGroup from '@client/components/form/group.vue';
+import * as os from '@client/os';
+import { defaultStore } from '@client/store';
+import * as symbols from '@client/symbols';
 
 export default defineComponent({
 	components: {
@@ -49,7 +50,7 @@ export default defineComponent({
 	
 	data() {
 		return {
-			INFO: {
+			[symbols.PAGE_INFO]: {
 				title: this.$ts.privacy,
 				icon: faLockOpen
 			},
@@ -74,7 +75,7 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.$emit('info', this.INFO);
+		this.$emit('info', this[symbols.PAGE_INFO]);
 	},
 
 	methods: {

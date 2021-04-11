@@ -33,14 +33,15 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { faCommentSlash, faSave } from '@fortawesome/free-solid-svg-icons';
-import FormTextarea from '@/components/form/textarea.vue';
-import FormBase from '@/components/form/base.vue';
-import FormKeyValueView from '@/components/form/key-value-view.vue';
-import FormButton from '@/components/form/button.vue';
-import MkTab from '@/components/tab.vue';
-import MkInfo from '@/components/ui/info.vue';
-import * as os from '@/os';
-import number from '@/filters/number';
+import FormTextarea from '@client/components/form/textarea.vue';
+import FormBase from '@client/components/form/base.vue';
+import FormKeyValueView from '@client/components/form/key-value-view.vue';
+import FormButton from '@client/components/form/button.vue';
+import MkTab from '@client/components/tab.vue';
+import MkInfo from '@client/components/ui/info.vue';
+import * as os from '@client/os';
+import number from '@client/filters/number';
+import * as symbols from '@client/symbols';
 
 export default defineComponent({
 	components: {
@@ -56,7 +57,7 @@ export default defineComponent({
 	
 	data() {
 		return {
-			INFO: {
+			[symbols.PAGE_INFO]: {
 				title: this.$ts.wordMute,
 				icon: faCommentSlash
 			},
@@ -92,7 +93,7 @@ export default defineComponent({
 	},
 
 	mounted() {
-		this.$emit('info', this.INFO);
+		this.$emit('info', this[symbols.PAGE_INFO]);
 	},
 
 	methods: {

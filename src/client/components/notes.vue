@@ -1,5 +1,5 @@
 <template>
-<div class="_list_">
+<div>
 	<div class="_fullinfo" v-if="empty">
 		<img src="https://xn--931a.moe/assets/info.jpg" class="_ghost"/>
 		<div>{{ $ts.noNotes }}</div>
@@ -15,7 +15,7 @@
 	</div>
 
 	<XList ref="notes" :items="notes" v-slot="{ item: note }" :direction="reversed ? 'up' : 'down'" :reversed="reversed">
-		<XNote :note="note" @update:note="updated(note, $event)" :key="note._featuredId_ || note._prId_ || note.id"/>
+		<XNote :note="note" class="_block _gap" @update:note="updated(note, $event)" :key="note._featuredId_ || note._prId_ || note.id"/>
 	</XList>
 
 	<div v-show="more && !reversed" style="margin-top: var(--margin);">
@@ -29,10 +29,10 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import paging from '@/scripts/paging';
+import paging from '@client/scripts/paging';
 import XNote from './note.vue';
 import XList from './date-separated-list.vue';
-import MkButton from '@/components/ui/button.vue';
+import MkButton from '@client/components/ui/button.vue';
 
 export default defineComponent({
 	components: {

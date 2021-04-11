@@ -48,11 +48,11 @@
 import { defineComponent } from 'vue';
 import { faGripVertical, faChevronLeft, faHashtag, faBroadcastTower, faFireAlt, faEllipsisH, faPencilAlt, faBars, faTimes, faSearch, faUserCog, faCog, faUser, faHome, faStar, faCircle, faAt, faListUl, faPlus, faUserClock, faUsers, faTachometerAlt, faExchangeAlt, faGlobe, faChartBar, faCloud, faServer, faInfoCircle, faQuestionCircle, faProjectDiagram, faStream, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { faBell, faEnvelope, faLaugh, faComments } from '@fortawesome/free-regular-svg-icons';
-import { host } from '@/config';
-import { search } from '@/scripts/search';
-import * as os from '@/os';
-import { sidebarDef } from '@/sidebar';
-import { getAccounts, addAccount, login } from '@/account';
+import { host } from '@client/config';
+import { search } from '@client/scripts/search';
+import * as os from '@client/os';
+import { sidebarDef } from '@client/sidebar';
+import { getAccounts, addAccount, login } from '@client/account';
 
 export default defineComponent({
 	props: {
@@ -235,12 +235,12 @@ export default defineComponent({
 		},
 
 		more(ev) {
-			os.popup(import('./launch-pad.vue'), {}, {
+			os.popup(import('@client/components/launch-pad.vue'), {}, {
 			}, 'closed');
 		},
 
 		addAcount() {
-			os.popup(import('./signin-dialog.vue'), {}, {
+			os.popup(import('@client/components/signin-dialog.vue'), {}, {
 				done: res => {
 					addAccount(res.id, res.i);
 					os.success();
@@ -249,7 +249,7 @@ export default defineComponent({
 		},
 
 		createAccount() {
-			os.popup(import('./signup-dialog.vue'), {}, {
+			os.popup(import('@client/components/signup-dialog.vue'), {}, {
 				done: res => {
 					addAccount(res.id, res.i);
 					this.switchAccountWithToken(res.i);
@@ -380,7 +380,7 @@ export default defineComponent({
 
 			> .divider {
 				margin: 16px 0;
-				border-top: solid 1px var(--divider);
+				border-top: solid 0.5px var(--divider);
 			}
 
 			> .item {
@@ -443,13 +443,13 @@ export default defineComponent({
 				&:first-child {
 					top: 0;
 					margin-bottom: 16px;
-					border-bottom: solid 1px var(--divider);
+					border-bottom: solid 0.5px var(--divider);
 				}
 
 				&:last-child {
 					bottom: 0;
 					margin-top: 16px;
-					border-top: solid 1px var(--divider);
+					border-top: solid 0.5px var(--divider);
 				}
 			}
 		}

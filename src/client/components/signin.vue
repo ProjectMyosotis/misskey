@@ -1,6 +1,6 @@
 <template>
-<form class="eppvobhk" :class="{ signing, totpLogin }" @submit.prevent="onSubmit">
-	<div class="auth _section">
+<form class="eppvobhk _root" :class="{ signing, totpLogin }" @submit.prevent="onSubmit">
+	<div class="auth">
 		<div class="avatar" :style="{ backgroundImage: user ? `url('${ user.avatarUrl }')` : null }" v-show="withAvatar"></div>
 		<div class="normal-signin" v-if="!totpLogin">
 			<MkInput v-model:value="username" type="text" pattern="^[a-zA-Z0-9_]+$" spellcheck="false" autofocus required @update:value="onUsernameChange">
@@ -38,25 +38,26 @@
 			</div>
 		</div>
 	</div>
-	<div class="social _section">
-		<a class="_borderButton _vMargin" v-if="meta && meta.enableTwitterIntegration" :href="`${apiUrl}/signin/twitter`"><Fa :icon="faTwitter" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'Twitter' }) }}</a>
-		<a class="_borderButton _vMargin" v-if="meta && meta.enableGithubIntegration" :href="`${apiUrl}/signin/github`"><Fa :icon="faGithub" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'GitHub' }) }}</a>
-		<a class="_borderButton _vMargin" v-if="meta && meta.enableDiscordIntegration" :href="`${apiUrl}/signin/discord`"><Fa :icon="faDiscord" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'Discord' }) }}</a>
+	<div class="_hr"></div>
+	<div class="social">
+		<a class="_borderButton _gap" v-if="meta && meta.enableTwitterIntegration" :href="`${apiUrl}/signin/twitter`"><Fa :icon="faTwitter" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'Twitter' }) }}</a>
+		<a class="_borderButton _gap" v-if="meta && meta.enableGithubIntegration" :href="`${apiUrl}/signin/github`"><Fa :icon="faGithub" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'GitHub' }) }}</a>
+		<a class="_borderButton _gap" v-if="meta && meta.enableDiscordIntegration" :href="`${apiUrl}/signin/discord`"><Fa :icon="faDiscord" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'Discord' }) }}</a>
 	</div>
 </form>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { toUnicode } from 'punycode';
+import { toUnicode } from 'punycode/';
 import { faLock, faGavel } from '@fortawesome/free-solid-svg-icons';
 import { faTwitter, faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
 import MkButton from './ui/button.vue';
 import MkInput from './ui/input.vue';
-import { apiUrl, host } from '@/config';
-import { byteify, hexify } from '@/scripts/2fa';
-import * as os from '@/os';
-import { login } from '@/account';
+import { apiUrl, host } from '@client/config';
+import { byteify, hexify } from '@client/scripts/2fa';
+import * as os from '@client/os';
+import { login } from '@client/account';
 
 export default defineComponent({
 	components: {

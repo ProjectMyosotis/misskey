@@ -39,14 +39,15 @@
 import { computed, defineComponent } from 'vue';
 import { faArrowCircleDown, faFlag, faUsers, faInfoCircle, faEllipsisH, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import { faWindowMaximize } from '@fortawesome/free-regular-svg-icons';
-import XList from '@/components/date-separated-list.vue';
+import XList from '@client/components/date-separated-list.vue';
 import XMessage from './messaging-room.message.vue';
 import XForm from './messaging-room.form.vue';
-import parseAcct from '../../../misc/acct/parse';
-import { isBottom, onScrollBottom, scroll } from '@/scripts/scroll';
-import * as os from '@/os';
-import { popout } from '@/scripts/popout';
-import * as sound from '@/scripts/sound';
+import parseAcct from '@/misc/acct/parse';
+import { isBottom, onScrollBottom, scroll } from '@client/scripts/scroll';
+import * as os from '@client/os';
+import { popout } from '@client/scripts/popout';
+import * as sound from '@client/scripts/sound';
+import * as symbols from '@client/symbols';
 
 const Component = defineComponent({
 	components: {
@@ -70,7 +71,7 @@ const Component = defineComponent({
 
 	data() {
 		return {
-			INFO: computed(() => !this.fetching ? this.user ? {
+			[symbols.PAGE_INFO]: computed(() => !this.fetching ? this.user ? {
 				userName: this.user,
 				avatar: this.user,
 				action: {
