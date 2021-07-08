@@ -70,7 +70,7 @@ module.exports = {
 					options: {
 						implementation: require('sass'),
 						sassOptions: {
-							fiber: require('fibers')
+							fiber: false
 						}
 					}
 				}]
@@ -88,7 +88,7 @@ module.exports = {
 					options: {
 						implementation: require('sass'),
 						sassOptions: {
-							fiber: require('fibers')
+							fiber: false
 						}
 					}
 				}]
@@ -103,6 +103,12 @@ module.exports = {
 					esModule: false, // TODO: trueにすると壊れる。Vue3移行の折にはtrueにできるかもしれない
 				}
 			}, postcss]
+		}, {
+			test: /\.svg$/,
+			use: [
+				'vue-loader',
+				'vue-svg-loader',
+			],
 		}, {
 			test: /\.(eot|woff|woff2|svg|ttf)([?]?.*)$/,
 			type: 'asset/resource'

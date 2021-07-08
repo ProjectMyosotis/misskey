@@ -11,6 +11,8 @@
 	@media (max-width: 500px) {
 		--margin: var(--marginHalf);
 	}
+
+	//--ad: rgb(255 169 0 / 10%);
 }
 
 ::selection {
@@ -26,6 +28,7 @@ html {
 	background-position: center;
 	color: var(--fg);
 	overflow: auto;
+	overflow-wrap: break-word;
 	font-family: "BIZ UDGothic", Roboto, HelveticaNeue, Arial, sans-serif;
 	line-height: 1.35;
 	text-size-adjust: 100%;
@@ -82,14 +85,10 @@ html {
 	}
 }
 
-html.changing-theme {
+html._themeChanging_ {
 	&, * {
-		transition: background 1s ease !important;
+		transition: background 1s ease, border 1s ease !important;
 	}
-}
-
-body {
-	overflow-wrap: break-word;
 }
 
 html, body {
@@ -147,6 +146,7 @@ hr {
 	width: 100%;
 	height: 100%;
 	background: var(--modalBg);
+	-webkit-backdrop-filter: var(--modalBgFilter);
 	backdrop-filter: var(--modalBgFilter);
 }
 
@@ -241,23 +241,18 @@ hr {
 	border-radius: var(--radius);
 	//border: var(--panelBorder);
 	box-shadow: var(--panelShadow);
-	overflow: hidden;
 	overflow: clip;
 }
 
 ._block {
 	@extend ._panel;
+
+	& + ._block {
+		margin-top: var(--margin);
+	}
 }
 
 ._gap {
-	margin: var(--margin) 0;
-}
-
-._magnet {
-	margin-bottom: calc(var(--margin) * -1);
-}
-
-._isolated {
 	margin: var(--margin) 0;
 }
 
@@ -334,27 +329,33 @@ hr {
 	margin: var(--root-margin, 32px) auto;
 	max-width: min(var(--baseContentWidth), calc(100% - (var(--root-margin, 32px) * 2)));
 
-	._hr {
-		margin: var(--margin) calc(var(--root-margin, 32px) * -1);
-		border-top: solid 0.5px var(--divider);
-	}
+	// 子marginが突き抜けるのを防ぐため
+	// https://stackoverflow.com/questions/1762539/margin-on-child-element-moves-parent-element
+	padding-top: 1px;
+	margin-top: calc(var(--root-margin, 32px) - 1px);
 
 	@media (max-width: 500px) {
 		--root-margin: 10px;
 	}
+}
 
-	& + ._root {
-		&:before {
-			content: "";
-			display: block;
-			margin: var(--root-margin) calc(var(--root-margin, 32px) * -1);
+._monolithic_ {
+	._section:not(:empty) {
+		box-sizing: border-box;
+		padding: var(--root-margin, 32px);
+	
+		@media (max-width: 500px) {
+			--root-margin: 10px;
+		}
+	
+		& + ._section:not(:empty) {
 			border-top: solid 0.5px var(--divider);
 		}
 	}
 }
 
 ._flat_ {
-	--root-margin: 0;
+	--root-margin: 0px;
 	--baseContentWidth: 100%;
 	--panelShadow: none;
 
@@ -375,7 +376,7 @@ hr {
 
 	@media (max-width: 500px) {
 		._root {
-			--root-margin: 0;
+			--root-margin: 0px;
 		}
 	}
 }
@@ -459,7 +460,7 @@ hr {
 }
 
 ._monospace {
-	font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
+	font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace !important;
 }
 
 ._code {
@@ -521,4 +522,33 @@ hr {
 	to {
 		transform: scale3d(1, 1, 1);
 	}
+}
+
+._anime_bounce {
+	will-change: transform;
+  animation: bounce ease 0.7s;
+  animation-iteration-count: 1;
+  transform-origin: 50% 50%;
+}
+._anime_bounce_ready {
+	will-change: transform;
+	transform:  scaleX(0.90) scaleY(0.90) ;
+}
+._anime_bounce_standBy {
+	transition: transform 0.1s ease;
+}
+
+@keyframes bounce{
+  0% {
+    transform:  scaleX(0.90) scaleY(0.90) ;
+  }
+  19% {
+    transform:  scaleX(1.10) scaleY(1.10) ;
+  }
+  48% {
+    transform:  scaleX(0.95) scaleY(0.95) ;
+  }
+  100% {
+    transform:  scaleX(1.00) scaleY(1.00) ;
+  }
 }

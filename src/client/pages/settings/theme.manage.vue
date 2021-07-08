@@ -13,18 +13,20 @@
 		<FormInput readonly :value="selectedTheme.author">
 			<span>{{ $ts.author }}</span>
 		</FormInput>
+		<FormTextarea readonly :value="selectedTheme.desc" v-if="selectedTheme.desc">
+			<span>{{ $ts._theme.description }}</span>
+		</FormTextarea>
 		<FormTextarea readonly tall :value="selectedThemeCode">
 			<span>{{ $ts._theme.code }}</span>
 			<template #desc><button @click="copyThemeCode()" class="_textButton">{{ $ts.copy }}</button></template>
 		</FormTextarea>
-		<FormButton @click="uninstall()" danger v-if="!builtinThemes.some(t => t.id == selectedTheme.id)"><Fa :icon="faTrashAlt"/> {{ $ts.uninstall }}</FormButton>
+		<FormButton @click="uninstall()" danger v-if="!builtinThemes.some(t => t.id == selectedTheme.id)"><i class="fas fa-trash-alt"></i> {{ $ts.uninstall }}</FormButton>
 	</template>
 </FormBase>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { faPalette, faDownload, faFolderOpen, faCheck, faTrashAlt, faEye } from '@fortawesome/free-solid-svg-icons';
 import * as JSON5 from 'json5';
 import FormTextarea from '@client/components/form/textarea.vue';
 import FormSelect from '@client/components/form/select.vue';
@@ -57,12 +59,11 @@ export default defineComponent({
 		return {
 			[symbols.PAGE_INFO]: {
 				title: this.$ts._theme.manage,
-				icon: faFolderOpen
+				icon: 'fas fa-folder-open'
 			},
 			installedThemes: getThemes(),
 			builtinThemes,
 			selectedThemeId: null,
-			faPalette, faDownload, faFolderOpen, faCheck, faTrashAlt, faEye
 		}
 	},
 
@@ -94,6 +95,7 @@ export default defineComponent({
 
 		uninstall() {
 			removeTheme(this.selectedTheme);
+			this.installedThemes = this.installedThemes.filter(t => t.id !== this.selectedThemeId);
 			this.selectedThemeId = null;
 			os.success();
 		},

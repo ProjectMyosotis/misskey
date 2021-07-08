@@ -4,8 +4,8 @@
 		<div class="title"><slot name="header"></slot></div>
 		<div class="divider"></div>
 		<button class="_button">
-			<template v-if="showBody"><Fa :icon="faAngleUp"/></template>
-			<template v-else><Fa :icon="faAngleDown"/></template>
+			<template v-if="showBody"><i class="fas fa-angle-up"></i></template>
+			<template v-else><i class="fas fa-angle-down"></i></template>
 		</button>
 	</header>
 	<transition name="folder-toggle"
@@ -23,7 +23,6 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { faAngleUp, faAngleDown } from '@fortawesome/free-solid-svg-icons';
 
 const localStoragePrefix = 'ui:folder:';
 
@@ -43,7 +42,6 @@ export default defineComponent({
 	data() {
 		return {
 			showBody: (this.persistKey && localStorage.getItem(localStoragePrefix + this.persistKey)) ? localStorage.getItem(localStoragePrefix + this.persistKey) === 't' : this.expanded,
-			faAngleUp, faAngleDown
 		};
 	},
 	watch: {
@@ -98,17 +96,18 @@ export default defineComponent({
 	> header {
 		display: flex;
 		position: relative;
-		z-index: 2;
-		// TODO
-		// position: sticky;
-		// top: var(--stickyTopOffset);
-		// backdrop-filter: blur(20px);
+		z-index: 10;
+		position: sticky;
+		top: var(--stickyTop, 0px);
+		background: var(--X17);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(20px);
 
 		> .title {
 			margin: 0;
 			padding: 12px 16px 12px 0;
 
-			> [data-icon] {
+			> i {
 				margin-right: 6px;
 			}
 
@@ -139,6 +138,8 @@ export default defineComponent({
 }
 
 ._flat_ .ssazuxis {
-	margin: var(--margin);
+	> header {
+		padding: 0 16px;
+	}
 }
 </style>

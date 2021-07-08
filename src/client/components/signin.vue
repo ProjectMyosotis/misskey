@@ -1,6 +1,6 @@
 <template>
-<form class="eppvobhk _root" :class="{ signing, totpLogin }" @submit.prevent="onSubmit">
-	<div class="auth">
+<form class="eppvobhk _monolithic_" :class="{ signing, totpLogin }" @submit.prevent="onSubmit">
+	<div class="auth _section">
 		<div class="avatar" :style="{ backgroundImage: user ? `url('${ user.avatarUrl }')` : null }" v-show="withAvatar"></div>
 		<div class="normal-signin" v-if="!totpLogin">
 			<MkInput v-model:value="username" type="text" pattern="^[a-zA-Z0-9_]+$" spellcheck="false" autofocus required @update:value="onUsernameChange">
@@ -10,7 +10,8 @@
 			</MkInput>
 			<MkInput v-model:value="password" type="password" :with-password-toggle="true" v-if="!user || user && !user.usePasswordLessLogin" required>
 				<span>{{ $ts.password }}</span>
-				<template #prefix><Fa :icon="faLock"/></template>
+				<template #prefix><i class="fas fa-lock"></i></template>
+				<template #desc><button class="_textButton" @click="resetPassword">{{ $ts.forgotPassword }}</button></template>
 			</MkInput>
 			<MkButton type="submit" primary :disabled="signing" style="margin: 0 auto;">{{ signing ? $ts.loggingIn : $ts.login }}</MkButton>
 		</div>
@@ -28,21 +29,20 @@
 				<p style="margin-bottom:0;">{{ $ts.twoStepAuthentication }}</p>
 				<MkInput v-model:value="password" type="password" :with-password-toggle="true" v-if="user && user.usePasswordLessLogin" required>
 					<span>{{ $ts.password }}</span>
-					<template #prefix><Fa :icon="faLock"/></template>
+					<template #prefix><i class="fas fa-lock"></i></template>
 				</MkInput>
 				<MkInput v-model:value="token" type="text" pattern="^[0-9]{6}$" autocomplete="off" spellcheck="false" required>
 					<span>{{ $ts.token }}</span>
-					<template #prefix><Fa :icon="faGavel"/></template>
+					<template #prefix><i class="fas fa-gavel"></i></template>
 				</MkInput>
 				<MkButton type="submit" :disabled="signing" primary style="margin: 0 auto;">{{ signing ? $ts.loggingIn : $ts.login }}</MkButton>
 			</div>
 		</div>
 	</div>
-	<div class="_hr"></div>
-	<div class="social">
-		<a class="_borderButton _gap" v-if="meta && meta.enableTwitterIntegration" :href="`${apiUrl}/signin/twitter`"><Fa :icon="faTwitter" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'Twitter' }) }}</a>
-		<a class="_borderButton _gap" v-if="meta && meta.enableGithubIntegration" :href="`${apiUrl}/signin/github`"><Fa :icon="faGithub" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'GitHub' }) }}</a>
-		<a class="_borderButton _gap" v-if="meta && meta.enableDiscordIntegration" :href="`${apiUrl}/signin/discord`"><Fa :icon="faDiscord" style="margin-right: 4px;"/>{{ $t('signinWith', { x: 'Discord' }) }}</a>
+	<div class="social _section">
+		<a class="_borderButton _gap" v-if="meta && meta.enableTwitterIntegration" :href="`${apiUrl}/signin/twitter`"><i class="fab fa-twitter" style="margin-right: 4px;"></i>{{ $t('signinWith', { x: 'Twitter' }) }}</a>
+		<a class="_borderButton _gap" v-if="meta && meta.enableGithubIntegration" :href="`${apiUrl}/signin/github`"><i class="fab fa-github" style="margin-right: 4px;"></i>{{ $t('signinWith', { x: 'GitHub' }) }}</a>
+		<a class="_borderButton _gap" v-if="meta && meta.enableDiscordIntegration" :href="`${apiUrl}/signin/discord`"><i class="fab fa-discord" style="margin-right: 4px;"></i>{{ $t('signinWith', { x: 'Discord' }) }}</a>
 	</div>
 </form>
 </template>
@@ -50,10 +50,8 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { toUnicode } from 'punycode/';
-import { faLock, faGavel } from '@fortawesome/free-solid-svg-icons';
-import { faTwitter, faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
-import MkButton from './ui/button.vue';
-import MkInput from './ui/input.vue';
+import MkButton from '@client/components/ui/button.vue';
+import MkInput from '@client/components/ui/input.vue';
 import { apiUrl, host } from '@client/config';
 import { byteify, hexify } from '@client/scripts/2fa';
 import * as os from '@client/os';
@@ -93,7 +91,6 @@ export default defineComponent({
 			credential: null,
 			challengeData: null,
 			queryingKey: false,
-			faLock, faGavel, faTwitter, faDiscord, faGithub
 		};
 	},
 
@@ -201,6 +198,11 @@ export default defineComponent({
 					this.signing = false;
 				});
 			}
+		},
+
+		resetPassword() {
+			os.popup(import('@client/components/forgot-password.vue'), {}, {
+			}, 'closed');
 		}
 	}
 });

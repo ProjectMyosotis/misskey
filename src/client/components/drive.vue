@@ -4,10 +4,10 @@
 		<div class="path" @contextmenu.prevent.stop="() => {}">
 			<XNavFolder :class="{ current: folder == null }"/>
 			<template v-for="f in hierarchyFolders">
-				<span class="separator"><Fa :icon="faAngleRight"/></span>
+				<span class="separator"><i class="fas fa-angle-right"></i></span>
 				<XNavFolder :folder="f"/>
 			</template>
-			<span class="separator" v-if="folder != null"><Fa :icon="faAngleRight"/></span>
+			<span class="separator" v-if="folder != null"><i class="fas fa-angle-right"></i></span>
 			<span class="folder current" v-if="folder != null">{{ folder.name }}</span>
 		</div>
 	</nav>
@@ -47,13 +47,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { faAngleRight, faFolderPlus, faICursor, faLink, faUpload } from '@fortawesome/free-solid-svg-icons';
 import XNavFolder from './drive.nav-folder.vue';
 import XFolder from './drive.folder.vue';
 import XFile from './drive.file.vue';
 import MkButton from './ui/button.vue';
 import * as os from '@client/os';
-import { faTrashAlt } from '@fortawesome/free-regular-svg-icons';
 
 export default defineComponent({
 	components: {
@@ -125,7 +123,6 @@ export default defineComponent({
 			),
 			moreFilesElement: null as Element,
 
-			faAngleRight
 		};
 	},
 
@@ -142,7 +139,7 @@ export default defineComponent({
 			});
 		}
 
-		this.connection = os.stream.useSharedConnection('drive');
+		this.connection = os.stream.useChannel('drive');
 
 		this.connection.on('fileCreated', this.onStreamDriveFileCreated);
 		this.connection.on('fileUpdated', this.onStreamDriveFileUpdated);
@@ -304,7 +301,7 @@ export default defineComponent({
 				}
 			}).then(({ canceled, result: url }) => {
 				if (canceled) return;
-				os.api('drive/files/upload_from_url', {
+				os.api('drive/files/upload-from-url', {
 					url: url,
 					folderId: this.folder ? this.folder.id : undefined
 				});
@@ -606,26 +603,26 @@ export default defineComponent({
 				type: 'label'
 			}, {
 				text: this.$ts.upload,
-				icon: faUpload,
+				icon: 'fas fa-upload',
 				action: () => { this.selectLocalFile(); }
 			}, {
 				text: this.$ts.fromUrl,
-				icon: faLink,
+				icon: 'fas fa-link',
 				action: () => { this.urlUpload(); }
 			}, null, {
 				text: this.folder ? this.folder.name : this.$ts.drive,
 				type: 'label'
 			}, this.folder ? {
 				text: this.$ts.renameFolder,
-				icon: faICursor,
+				icon: 'fas fa-i-cursor',
 				action: () => { this.renameFolder(this.folder); }
 			} : undefined, this.folder ? {
 				text: this.$ts.deleteFolder,
-				icon: faTrashAlt,
+				icon: 'fas fa-trash-alt',
 				action: () => { this.deleteFolder(this.folder); }
 			} : undefined, {
 				text: this.$ts.createFolder,
-				icon: faFolderPlus,
+				icon: 'fas fa-folder-plus',
 				action: () => { this.createFolder(); }
 			}];
 		},
@@ -693,7 +690,7 @@ export default defineComponent({
 					opacity: 0.5;
 					cursor: default;
 
-					> [data-icon] {
+					> i {
 						margin: 0;
 					}
 				}

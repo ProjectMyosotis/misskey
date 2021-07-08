@@ -7,6 +7,7 @@ import { SchemaType } from '@/misc/schema';
 import { awaitAll } from '../../prelude/await-all';
 import { populateEmojis } from '@/misc/populate-emojis';
 import { getAntennas } from '@/misc/antenna-cache';
+import { USER_ACTIVE_THRESHOLD, USER_ONLINE_THRESHOLD } from '@/const';
 
 export type PackedUser = SchemaType<typeof packedUserSchema>;
 
@@ -145,6 +146,17 @@ export class UserRepository extends Repository<User> {
 		return count > 0;
 	}
 
+	public getOnlineStatus(user: User): string {
+		if (user.hideOnlineStatus) return 'unknown';
+		if (user.lastActiveDate == null) return 'unknown';
+		const elapsed = Date.now() - user.lastActiveDate.getTime();
+		return (
+			elapsed < USER_ONLINE_THRESHOLD ? 'online' :
+			elapsed < USER_ACTIVE_THRESHOLD ? 'active' :
+			'offline'
+		);
+	}
+
 	public async pack(
 		src: User['id'] | User,
 		me?: { id: User['id'] } | null | undefined,
@@ -192,11 +204,14 @@ export class UserRepository extends Repository<User> {
 				themeColor: instance.themeColor,
 			} : undefined) : undefined,
 			emojis: populateEmojis(user.emojis, user.host),
+			onlineStatus: this.getOnlineStatus(user),
 
 			...(opts.detail ? {
 				url: profile!.url,
+				uri: user.uri,
 				createdAt: user.createdAt.toISOString(),
 				updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null,
+				lastFetchedAt: user.lastFetchedAt?.toISOString(),
 				bannerUrl: user.bannerUrl,
 				bannerBlurhash: user.bannerBlurhash,
 				bannerColor: null, // 後方互換性のため
@@ -237,6 +252,7 @@ export class UserRepository extends Repository<User> {
 				autoAcceptFollowed: profile!.autoAcceptFollowed,
 				noCrawle: profile!.noCrawle,
 				isExplorable: user.isExplorable,
+				hideOnlineStatus: user.hideOnlineStatus,
 				hasUnreadSpecifiedNotes: NoteUnreads.count({
 					where: { userId: user.id, isSpecified: true },
 					take: 1
@@ -326,19 +342,16 @@ export const packedUserSchema = {
 			type: 'string' as const,
 			nullable: false as const, optional: false as const,
 			format: 'id',
-			description: 'The unique identifier for this User.',
 			example: 'xxxxxxxxxx',
 		},
 		name: {
 			type: 'string' as const,
 			nullable: true as const, optional: false as const,
-			description: 'The name of the user, as they’ve defined it.',
 			example: '藍'
 		},
 		username: {
 			type: 'string' as const,
 			nullable: false as const, optional: false as const,
-			description: 'The screen name, handle, or alias that this user identifies themselves with.',
 			example: 'ai'
 		},
 		host: {
@@ -363,24 +376,20 @@ export const packedUserSchema = {
 		isAdmin: {
 			type: 'boolean' as const,
 			nullable: false as const, optional: false as const,
-			description: 'Whether this account is the admin.',
 			default: false
 		},
 		isModerator: {
 			type: 'boolean' as const,
 			nullable: false as const, optional: false as const,
-			description: 'Whether this account is a moderator.',
 			default: false
 		},
 		isBot: {
 			type: 'boolean' as const,
 			nullable: false as const, optional: true as const,
-			description: 'Whether this account is a bot.'
 		},
 		isCat: {
 			type: 'boolean' as const,
 			nullable: false as const, optional: true as const,
-			description: 'Whether this account is a cat.'
 		},
 		emojis: {
 			type: 'array' as const,
@@ -422,7 +431,6 @@ export const packedUserSchema = {
 			type: 'string' as const,
 			nullable: false as const, optional: true as const,
 			format: 'date-time',
-			description: 'The date that the user account was created on Misskey.'
 		},
 		updatedAt: {
 			type: 'string' as const,
@@ -455,7 +463,6 @@ export const packedUserSchema = {
 		description: {
 			type: 'string' as const,
 			nullable: true as const, optional: true as const,
-			description: 'The user-defined UTF-8 string describing their account.',
 			example: 'Hi masters, I am Ai!'
 		},
 		location: {
@@ -489,17 +496,14 @@ export const packedUserSchema = {
 		followersCount: {
 			type: 'number' as const,
 			nullable: false as const, optional: true as const,
-			description: 'The number of followers this account currently has.'
 		},
 		followingCount: {
 			type: 'number' as const,
 			nullable: false as const, optional: true as const,
-			description: 'The number of users this account is following.'
 		},
 		notesCount: {
 			type: 'number' as const,
 			nullable: false as const, optional: true as const,
-			description: 'The number of Notes (including renotes) issued by the user.'
 		},
 		pinnedNoteIds: {
 			type: 'array' as const,

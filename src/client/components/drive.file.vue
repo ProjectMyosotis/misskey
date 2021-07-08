@@ -32,8 +32,6 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
-import { faDownload, faLink, faICursor, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import copyToClipboard from '@client/scripts/copy-to-clipboard';
 import MkDriveFileThumbnail from './drive-file-thumbnail.vue';
 import bytes from '@client/filters/bytes';
@@ -83,26 +81,30 @@ export default defineComponent({
 		getMenu() {
 			return [{
 				text: this.$ts.rename,
-				icon: faICursor,
+				icon: 'fas fa-i-cursor',
 				action: this.rename
 			}, {
 				text: this.file.isSensitive ? this.$ts.unmarkAsSensitive : this.$ts.markAsSensitive,
-				icon: this.file.isSensitive ? faEye : faEyeSlash,
+				icon: this.file.isSensitive ? 'fas fa-eye' : 'fas fa-eye-slash',
 				action: this.toggleSensitive
+			}, {
+				text: this.$ts.describeFile,
+				icon: 'fas fa-i-cursor',
+				action: this.describe
 			}, null, {
 				text: this.$ts.copyUrl,
-				icon: faLink,
+				icon: 'fas fa-link',
 				action: this.copyUrl
 			}, {
 				type: 'a',
 				href: this.file.url,
 				target: '_blank',
 				text: this.$ts.download,
-				icon: faDownload,
+				icon: 'fas fa-download',
 				download: this.file.name
 			}, null, {
 				text: this.$ts.delete,
-				icon: faTrashAlt,
+				icon: 'fas fa-trash-alt',
 				danger: true,
 				action: this.deleteFile
 			}];
@@ -150,6 +152,26 @@ export default defineComponent({
 					name: name
 				});
 			});
+		},
+
+		describe() {
+			os.popup(import('@client/components/media-caption.vue'), {
+				title: this.$ts.describeFile,
+				input: {
+					placeholder: this.$ts.inputNewDescription,
+					default: this.file.comment !== null ? this.file.comment : '',
+				},
+				image: this.file
+			}, {
+				done: result => {
+					if (!result || result.canceled) return;
+					let comment = result.result;
+					os.api('drive/files/update', {
+						fileId: this.file.id,
+						comment: comment.length == 0 ? null : comment
+					});
+				}
+			}, 'closed');
 		},
 
 		toggleSensitive() {

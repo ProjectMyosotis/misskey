@@ -1,33 +1,32 @@
 <template>
 <div class="qjewsnkg" v-if="hide" @click="hide = false">
-	<ImgWithBlurhash class="bg" :hash="image.blurhash" :title="image.name"/>
+	<ImgWithBlurhash class="bg" :hash="image.blurhash" :title="image.comment" :alt="image.comment"/>
 	<div class="text">
 		<div>
-			<b><Fa :icon="faExclamationTriangle"/> {{ $ts.sensitive }}</b>
+			<b><i class="fas fa-exclamation-triangle"></i> {{ $ts.sensitive }}</b>
 			<span>{{ $ts.clickToShow }}</span>
 		</div>
 	</div>
 </div>
 <div class="gqnyydlz" :style="{ background: color }" v-else>
-	<i><Fa :icon="faEyeSlash" @click="hide = true"/></i>
 	<a
 		:href="image.url"
 		:title="image.name"
 		@click.prevent="onClick"
 	>
-		<ImgWithBlurhash :hash="image.blurhash" :src="url" :alt="image.name" :title="image.name" :cover="false"/>
+		<ImgWithBlurhash :hash="image.blurhash" :src="url" :alt="image.comment" :title="image.comment" :cover="false"/>
 		<div class="gif" v-if="image.type === 'image/gif'">GIF</div>
 	</a>
+	<i class="fas fa-eye-slash" @click="hide = true"></i>
 </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { faExclamationTriangle, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { getStaticImageUrl } from '@client/scripts/get-static-image-url';
 import { extractAvgColorFromBlurhash } from '@client/scripts/extract-avg-color-from-blurhash';
 import ImageViewer from './image-viewer.vue';
-import ImgWithBlurhash from './img-with-blurhash.vue';
+import ImgWithBlurhash from '@client/components/img-with-blurhash.vue';
 import * as os from '@client/os';
 
 export default defineComponent({
@@ -47,7 +46,6 @@ export default defineComponent({
 		return {
 			hide: true,
 			color: null,
-			faExclamationTriangle, faEyeSlash,
 		};
 	},
 	computed: {

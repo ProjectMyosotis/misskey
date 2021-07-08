@@ -1,4 +1,4 @@
-FROM node:14.15.5-alpine3.13 AS base
+FROM node:16.2.0-alpine3.13 AS base
 
 ENV NODE_ENV=production
 
@@ -24,7 +24,7 @@ RUN apk add --no-cache \
     vips-dev \
     vips
 
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .yarnrc ./
 RUN yarn install
 COPY . ./
 RUN node version-patch.js ${VERSION_HASH} && yarn build

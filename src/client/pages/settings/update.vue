@@ -1,8 +1,8 @@
 <template>
 <FormBase>
 	<template v-if="meta">
-		<MkInfo v-if="version === meta.version">{{ $ts.youAreRunningUpToDateClient }}</MkInfo>
-		<MkInfo v-else warn>{{ $ts.newVersionOfClientAvailable }}</MkInfo>
+		<FormInfo v-if="version === meta.version">{{ $ts.youAreRunningUpToDateClient }}</FormInfo>
+		<FormInfo v-else warn>{{ $ts.newVersionOfClientAvailable }}</FormInfo>
 	</template>
 	<FormGroup>
 		<template #label>{{ instanceName }}</template>
@@ -30,7 +30,6 @@
 
 <script lang="ts">
 import { defineAsyncComponent, defineComponent } from 'vue';
-import { faInfoCircle, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import FormSwitch from '@client/components/form/switch.vue';
 import FormSelect from '@client/components/form/select.vue';
 import FormLink from '@client/components/form/link.vue';
@@ -38,7 +37,7 @@ import FormBase from '@client/components/form/base.vue';
 import FormGroup from '@client/components/form/group.vue';
 import FormButton from '@client/components/form/button.vue';
 import FormKeyValueView from '@client/components/form/key-value-view.vue';
-import MkInfo from '@client/components/ui/info.vue';
+import FormInfo from '@client/components/form/info.vue';
 import * as os from '@client/os';
 import { version, instanceName } from '@client/config';
 import * as symbols from '@client/symbols';
@@ -52,7 +51,7 @@ export default defineComponent({
 		FormLink,
 		FormGroup,
 		FormKeyValueView,
-		MkInfo,
+		FormInfo,
 	},
 
 	emits: ['info'],
@@ -61,7 +60,7 @@ export default defineComponent({
 		return {
 			[symbols.PAGE_INFO]: {
 				title: 'Misskey Update',
-				icon: faSyncAlt
+				icon: 'fas fa-sync-alt'
 			},
 			version,
 			instanceName,

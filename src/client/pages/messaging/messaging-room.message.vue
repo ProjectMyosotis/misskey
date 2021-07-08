@@ -1,6 +1,6 @@
 <template>
 <div class="thvuemwp" :class="{ isMe }" v-size="{ max: [400, 500] }">
-	<MkAvatar class="avatar" :user="message.user"/>
+	<MkAvatar class="avatar" :user="message.user" :show-indicator="true"/>
 	<div class="content">
 		<div class="balloon" :class="{ noText: message.text == null }" >
 			<button class="delete-button" v-if="isMe" :title="$ts.delete" @click="del">
@@ -29,7 +29,7 @@
 				<span class="read" v-if="isMe && message.isRead">{{ $ts.messageRead }}</span>
 			</template>
 			<MkTime :time="message.createdAt"/>
-			<template v-if="message.is_edited"><Fa icon="pencil-alt"/></template>
+			<template v-if="message.is_edited"><i class="fas fa-pencil-alt"></i></template>
 		</footer>
 	</div>
 </div>
@@ -85,6 +85,8 @@ export default defineComponent({
 	display: flex;
 
 	> .avatar {
+		position: sticky;
+		top: calc(var(--stickyTop, 0px) + 16px);
 		display: block;
 		width: 54px;
 		height: 54px;
@@ -219,7 +221,7 @@ export default defineComponent({
 				margin: 0 8px;
 			}
 
-			> [data-icon] {
+			> i {
 				margin-left: 4px;
 			}
 		}
@@ -273,6 +275,11 @@ export default defineComponent({
 			> .balloon {
 				background: $me-balloon-color;
 				text-align: left;
+
+				::selection {
+					color: var(--accent);
+					background-color: #fff;
+				} 
 
 				&.noText {
 					background: transparent;

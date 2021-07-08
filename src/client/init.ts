@@ -6,8 +6,7 @@ import '@client/style.scss';
 
 import * as Sentry from '@sentry/browser';
 import { Integrations } from '@sentry/tracing';
-import { createApp, watch } from 'vue';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { computed, createApp, watch } from 'vue';
 
 import widgets from '@client/widgets';
 import directives from '@client/directives';
@@ -25,7 +24,6 @@ import { fetchInstance, instance } from '@client/instance';
 import { makeHotkey } from '@client/scripts/hotkey';
 import { search } from '@client/scripts/search';
 import { isMobile } from '@client/scripts/is-mobile';
-import { getThemes } from '@client/theme-store';
 import { initializeSw } from '@client/scripts/initialize-sw';
 import { reloadChannel } from '@client/scripts/unison-reload';
 import { reactionPicker } from '@client/scripts/reaction-picker';
@@ -35,6 +33,18 @@ console.info(`Misskey v${version}`);
 // boot.jsのやつを解除
 window.onerror = null;
 window.onunhandledrejection = null;
+
+// 後方互換性のため。
+// TODO: そのうち消す
+if ((typeof ColdDeviceStorage.get('lightTheme') === 'string') || (typeof ColdDeviceStorage.get('darkTheme') === 'string')) {
+	ColdDeviceStorage.set('lightTheme', require('@client/themes/l-light.json5'));
+	ColdDeviceStorage.set('darkTheme', require('@client/themes/d-dark.json5'));
+}
+const link = document.createElement('link');
+link.rel = 'stylesheet';
+link.href = 'https://use.fontawesome.com/releases/v5.15.3/css/all.css';
+document.head.appendChild(link);
+// TODOここまで
 
 if (_DEV_) {
 	console.warn('Development mode!!!');
@@ -153,8 +163,6 @@ fetchInstance().then(() => {
 	initializeSw();
 });
 
-stream.init($i);
-
 const app = createApp(await (
 	window.location.search === '?zen' ? import('@client/ui/zen.vue') :
 	!$i                               ? import('@client/ui/visitor.vue') :
@@ -178,8 +186,6 @@ app.config.globalProperties = {
 };
 
 app.use(router);
-// eslint-disable-next-line vue/component-definition-name-casing
-app.component('Fa', FontAwesomeIcon);
 
 widgets(app);
 directives(app);
@@ -205,11 +211,23 @@ if (splash) {
 }
 
 watch(defaultStore.reactiveState.darkMode, (darkMode) => {
-	import('@client/scripts/theme').then(({ builtinThemes }) => {
-		const themes = builtinThemes.concat(getThemes());
-		applyTheme(themes.find(x => x.id === (darkMode ? ColdDeviceStorage.get('darkTheme') : ColdDeviceStorage.get('lightTheme'))));
-	});
+	applyTheme(darkMode ? ColdDeviceStorage.get('darkTheme') : ColdDeviceStorage.get('lightTheme'));
 }, { immediate: localStorage.theme == null });
+
+const darkTheme = computed(ColdDeviceStorage.makeGetterSetter('darkTheme'));
+const lightTheme = computed(ColdDeviceStorage.makeGetterSetter('lightTheme'));
+
+watch(darkTheme, (theme) => {
+	if (defaultStore.state.darkMode) {
+		applyTheme(theme);
+	}
+});
+
+watch(lightTheme, (theme) => {
+	if (!defaultStore.state.darkMode) {
+		applyTheme(theme);
+	}
+});
 
 //#region Sync dark mode
 if (ColdDeviceStorage.get('syncDeviceDarkMode')) {
@@ -276,7 +294,7 @@ if ($i) {
 		}
 	}
 
-	const main = stream.useSharedConnection('main', 'System');
+	const main = stream.useChannel('main', null, 'System');
 
 	// 自分の情報が更新されたとき
 	main.on('meUpdated', i => {
@@ -336,10 +354,6 @@ if ($i) {
 	main.on('unreadChannel', () => {
 		updateAccount({ hasUnreadChannel: true });
 		sound.play('channel');
-	});
-
-	main.on('readAllAnnouncements', () => {
-		updateAccount({ hasUnreadAnnouncement: false });
 	});
 
 	// トークンが再生成されたとき
