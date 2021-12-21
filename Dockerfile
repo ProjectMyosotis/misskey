@@ -10,24 +10,13 @@ FROM base AS builder
 
 ARG VERSION_HASH
 
-RUN apk add --no-cache \
-    autoconf \
-    automake \
-    file \
-    g++ \
-    gcc \
-    libc-dev \
-    libtool \
-    make \
-    nasm \
-    pkgconfig \
-    python3 \
-    zlib-dev
-
-COPY package.json yarn.lock .yarnrc ./
-RUN yarn install
 COPY . ./
-RUN node version-patch.js ${VERSION_HASH} && yarn build
+RUN apk add --no-cache $BUILD_DEPS && \
+    git submodule update --init && \
+    yarn install && \
+    node version-patch.js ${VERSION_HASH} && \
+    yarn build && \
+    rm -rf .git
 
 FROM base AS runner
 
