@@ -16,6 +16,7 @@ services:
     volumes:
       - ./config:/misskey/.config
       - ./files:/misskey/files
+      - ./.config:/misskey/.config:ro
 
   redis:
     restart: always
