@@ -7,7 +7,6 @@ import config from '@/config/index';
 import * as chalk from 'chalk';
 import Logger from '@/services/logger';
 import * as IPCIDR from 'ip-cidr';
-const PrivateIp = require('private-ip');
 
 const pipeline = util.promisify(stream.pipeline);
 
@@ -40,13 +39,6 @@ export async function downloadUrl(url: string, path: string): Promise<void> {
 		http2: false,	// default
 		retry: 0,
 	}).on('response', (res: Got.Response) => {
-		if ((process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') && !config.proxy && res.ip) {
-			if (isPrivateIp(res.ip)) {
-				logger.warn(`Blocked address: ${res.ip}`);
-				req.destroy();
-			}
-		}
-
 		const contentLength = res.headers['content-length'];
 		if (contentLength != null) {
 			const size = Number(contentLength);
@@ -73,15 +65,4 @@ export async function downloadUrl(url: string, path: string): Promise<void> {
 	}
 
 	logger.succ(`Download finished: ${chalk.cyan(url)}`);
-}
-
-function isPrivateIp(ip: string) {
-	for (const net of config.allowedPrivateNetworks || []) {
-		const cidr = new IPCIDR(net);
-		if (cidr.contains(ip)) {
-			return false;
-		}
-	}
-
-	return PrivateIp(ip);
 }
