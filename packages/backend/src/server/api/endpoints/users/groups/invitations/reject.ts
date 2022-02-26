@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../../../define';
 import { ApiError } from '../../../../error';
 import { UserGroupInvitations } from '@/models/index';
@@ -7,15 +5,9 @@ import { UserGroupInvitations } from '@/models/index';
 export const meta = {
 	tags: ['groups', 'users'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:user-groups',
-
-	params: {
-		invitationId: {
-			validator: $.type(ID),
-		},
-	},
 
 	errors: {
 		noSuchInvitation: {
@@ -24,9 +16,18 @@ export const meta = {
 			id: 'ad7471d4-2cd9-44b4-ac68-e7136b4ce656',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		invitationId: { type: 'string', format: 'misskey:id' },
+	},
+	required: ['invitationId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	// Fetch the invitation
 	const invitation = await UserGroupInvitations.findOne({
 		id: ps.invitationId,

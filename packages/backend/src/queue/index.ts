@@ -6,7 +6,8 @@ import { envOption } from '../env';
 import processDeliver from './processors/deliver';
 import processInbox from './processors/inbox';
 import processDb from './processors/db/index';
-import procesObjectStorage from './processors/object-storage/index';
+import processObjectStorage from './processors/object-storage/index';
+import processSystemQueue from './processors/system/index';
 import { queueLogger } from './logger';
 import { DriveFile } from '@/models/entities/drive-file';
 import { getJobInfo } from './get-job-info';
@@ -213,6 +214,16 @@ export function createImportUserListsJob(user: ThinUser, fileId: DriveFile['id']
 	});
 }
 
+export function createImportCustomEmojisJob(user: ThinUser, fileId: DriveFile['id']) {
+	return dbQueue.add('importCustomEmojis', {
+		user: user,
+		fileId: fileId,
+	}, {
+		removeOnComplete: true,
+		removeOnFail: true,
+	});
+}
+
 export function createDeleteAccountJob(user: ThinUser, opts: { soft?: boolean; } = {}) {
 	return dbQueue.add('deleteAccount', {
 		user: user,
@@ -245,12 +256,24 @@ export default function() {
 	deliverQueue.process(config.deliverJobConcurrency || 128, processDeliver);
 	inboxQueue.process(config.inboxJobConcurrency || 16, processInbox);
 	processDb(dbQueue);
-	procesObjectStorage(objectStorageQueue);
+	processObjectStorage(objectStorageQueue);
+
+	systemQueue.add('tickCharts', {
+	}, {
+		repeat: { cron: '55 * * * *' },
+	});
 
 	systemQueue.add('resyncCharts', {
 	}, {
 		repeat: { cron: '0 0 * * *' },
 	});
+
+	systemQueue.add('cleanCharts', {
+	}, {
+		repeat: { cron: '0 0 * * *' },
+	});
+
+	processSystemQueue(systemQueue);
 }
 
 export function destroy() {

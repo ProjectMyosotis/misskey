@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import { publishNoteStream } from '@/services/stream';
 import { createNotification } from '@/services/create-notification';
 import define from '../../../define';
@@ -17,19 +15,9 @@ import { genId } from '@/misc/gen-id';
 export const meta = {
 	tags: ['notes'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:votes',
-
-	params: {
-		noteId: {
-			validator: $.type(ID),
-		},
-
-		choice: {
-			validator: $.num,
-		},
-	},
 
 	errors: {
 		noSuchNote: {
@@ -68,9 +56,19 @@ export const meta = {
 			id: '85a5377e-b1e9-4617-b0b9-5bea73331e49',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		noteId: { type: 'string', format: 'misskey:id' },
+		choice: { type: 'integer' },
+	},
+	required: ['noteId', 'choice'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const createdAt = new Date();
 
 	// Get votee

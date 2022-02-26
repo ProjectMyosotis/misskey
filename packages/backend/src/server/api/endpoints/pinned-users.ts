@@ -7,23 +7,27 @@ import { User } from '@/models/entities/user';
 export const meta = {
 	tags: ['users'],
 
-	requireCredential: false as const,
-
-	params: {
-	},
+	requireCredential: false,
 
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
-			ref: 'User',
+			type: 'object',
+			optional: false, nullable: false,
+			ref: 'UserDetailed',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, me) => {
+export const paramDef = {
+	type: 'object',
+	properties: {},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, me) => {
 	const meta = await fetchMeta();
 
 	const users = await Promise.all(meta.pinnedUsers.map(acct => Users.findOne(Acct.parse(acct))));

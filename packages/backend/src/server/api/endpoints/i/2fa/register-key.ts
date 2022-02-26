@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import * as bcrypt from 'bcryptjs';
 import define from '../../../define';
 import { UserProfiles, AttestationChallenges } from '@/models/index';
@@ -10,18 +9,21 @@ import { hash } from '../../../2fa';
 const randomBytes = promisify(crypto.randomBytes);
 
 export const meta = {
-	requireCredential: true as const,
+	requireCredential: true,
 
 	secure: true,
+} as const;
 
-	params: {
-		password: {
-			validator: $.str,
-		},
+export const paramDef = {
+	type: 'object',
+	properties: {
+		password: { type: 'string' },
 	},
-};
+	required: ['password'],
+} as const;
 
-export default define(meta, async (ps, user) => {
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const profile = await UserProfiles.findOneOrFail(user.id);
 
 	// Compare password
@@ -44,7 +46,7 @@ export default define(meta, async (ps, user) => {
 
 	const challengeId = genId();
 
-	await AttestationChallenges.save({
+	await AttestationChallenges.insert({
 		userId: user.id,
 		id: challengeId,
 		challenge: hash(Buffer.from(challenge, 'utf-8')).toString('hex'),

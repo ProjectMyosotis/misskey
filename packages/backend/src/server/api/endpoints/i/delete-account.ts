@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import * as bcrypt from 'bcryptjs';
 import define from '../../define';
 import { UserProfiles, Users } from '@/models/index';
@@ -7,18 +6,21 @@ import { publishUserEvent } from '@/services/stream';
 import { createDeleteAccountJob } from '@/queue';
 
 export const meta = {
-	requireCredential: true as const,
+	requireCredential: true,
 
 	secure: true,
+} as const;
 
-	params: {
-		password: {
-			validator: $.str,
-		},
+export const paramDef = {
+	type: 'object',
+	properties: {
+		password: { type: 'string' },
 	},
-};
+	required: ['password'],
+} as const;
 
-export default define(meta, async (ps, user) => {
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const profile = await UserProfiles.findOneOrFail(user.id);
 	const userDetailed = await Users.findOneOrFail(user.id);
 	if (userDetailed.isDeleted) {

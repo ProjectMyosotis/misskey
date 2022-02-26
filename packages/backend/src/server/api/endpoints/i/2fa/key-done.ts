@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import * as bcrypt from 'bcryptjs';
 import { promisify } from 'util';
 import * as cbor from 'cbor';
@@ -14,34 +13,28 @@ import { procedures, hash } from '../../../2fa';
 import { publishMainStream } from '@/services/stream';
 
 const cborDecodeFirst = promisify(cbor.decodeFirst) as any;
-
-export const meta = {
-	requireCredential: true as const,
-
-	secure: true,
-
-	params: {
-		clientDataJSON: {
-			validator: $.str,
-		},
-		attestationObject: {
-			validator: $.str,
-		},
-		password: {
-			validator: $.str,
-		},
-		challengeId: {
-			validator: $.str,
-		},
-		name: {
-			validator: $.str,
-		},
-	},
-};
-
 const rpIdHashReal = hash(Buffer.from(config.hostname, 'utf-8'));
 
-export default define(meta, async (ps, user) => {
+export const meta = {
+	requireCredential: true,
+
+	secure: true,
+} as const;
+
+export const paramDef = {
+	type: 'object',
+	properties: {
+		clientDataJSON: { type: 'string' },
+		attestationObject: { type: 'string' },
+		password: { type: 'string' },
+		challengeId: { type: 'string' },
+		name: { type: 'string' },
+	},
+	required: ['clientDataJSON', 'attestationObject', 'password', 'challengeId', 'name'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const profile = await UserProfiles.findOneOrFail(user.id);
 
 	// Compare password
@@ -129,7 +122,7 @@ export default define(meta, async (ps, user) => {
 
 	const credentialIdString = credentialId.toString('hex');
 
-	await UserSecurityKeys.save({
+	await UserSecurityKeys.insert({
 		userId: user.id,
 		id: credentialIdString,
 		lastUsed: new Date(),

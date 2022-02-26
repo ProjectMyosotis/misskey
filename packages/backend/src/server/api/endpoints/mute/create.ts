@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { ApiError } from '../../error';
 import { getUser } from '../../common/getters';
@@ -11,15 +9,9 @@ import { publishUserEvent } from '@/services/stream';
 export const meta = {
 	tags: ['account'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:mutes',
-
-	params: {
-		userId: {
-			validator: $.type(ID),
-		},
-	},
 
 	errors: {
 		noSuchUser: {
@@ -40,9 +32,18 @@ export const meta = {
 			id: '7e7359cb-160c-4956-b08f-4d1c653cd007',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		userId: { type: 'string', format: 'misskey:id' },
+	},
+	required: ['userId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const muter = user;
 
 	// 自分自身

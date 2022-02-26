@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import * as bcrypt from 'bcryptjs';
 import { publishMainStream } from '@/services/stream';
 import define from '../define';
@@ -6,24 +5,24 @@ import { Users, UserProfiles, PasswordResetRequests } from '@/models/index';
 import { ApiError } from '../error';
 
 export const meta = {
-	requireCredential: false as const,
-
-	params: {
-		token: {
-			validator: $.str,
-		},
-
-		password: {
-			validator: $.str,
-		},
-	},
+	requireCredential: false,
 
 	errors: {
 
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		token: { type: 'string' },
+		password: { type: 'string' },
+	},
+	required: ['token', 'password'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const req = await PasswordResetRequests.findOneOrFail({
 		token: ps.token,
 	});

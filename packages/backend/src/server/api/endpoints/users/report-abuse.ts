@@ -1,6 +1,4 @@
-import $ from 'cafy';
 import * as sanitizeHtml from 'sanitize-html';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { publishAdminStream } from '@/services/stream';
 import { ApiError } from '../../error';
@@ -13,17 +11,7 @@ import { fetchMeta } from '@/misc/fetch-meta';
 export const meta = {
 	tags: ['users'],
 
-	requireCredential: true as const,
-
-	params: {
-		userId: {
-			validator: $.type(ID),
-		},
-
-		comment: {
-			validator: $.str.range(1, 2048),
-		},
-	},
+	requireCredential: true,
 
 	errors: {
 		noSuchUser: {
@@ -44,10 +32,19 @@ export const meta = {
 			id: '35e166f5-05fb-4f87-a2d5-adb42676d48f',
 		},
 	},
-};
+} as const;
+
+export const paramDef = {
+	type: 'object',
+	properties: {
+		userId: { type: 'string', format: 'misskey:id' },
+		comment: { type: 'string', minLength: 1, maxLength: 2048 },
+	},
+	required: ['userId', 'comment'],
+} as const;
 
 // eslint-disable-next-line import/no-default-export
-export default define(meta, async (ps, me) => {
+export default define(meta, paramDef, async (ps, me) => {
 	// Lookup user
 	const user = await getUser(ps.userId).catch(e => {
 		if (e.id === '15348ddd-432d-49c2-8a5a-8069753becff') throw new ApiError(meta.errors.noSuchUser);
@@ -62,7 +59,7 @@ export default define(meta, async (ps, me) => {
 		throw new ApiError(meta.errors.cannotReportAdmin);
 	}
 
-	const report = await AbuseUserReports.save({
+	const report = await AbuseUserReports.insert({
 		id: genId(),
 		createdAt: new Date(),
 		targetUserId: user.id,
@@ -70,7 +67,7 @@ export default define(meta, async (ps, me) => {
 		reporterId: me.id,
 		reporterHost: null,
 		comment: ps.comment,
-	});
+	}).then(x => AbuseUserReports.findOneOrFail(x.identifiers[0]));
 
 	// Publish event to moderators
 	setTimeout(async () => {

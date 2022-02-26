@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { ClipNotes, Clips, Notes } from '@/models/index';
 import { makePaginationQuery } from '../../common/make-pagination-query';
@@ -11,28 +9,9 @@ import { generateBlockedUserQuery } from '../../common/generate-block-query';
 export const meta = {
 	tags: ['account', 'notes', 'clips'],
 
-	requireCredential: false as const,
+	requireCredential: false,
 
 	kind: 'read:account',
-
-	params: {
-		clipId: {
-			validator: $.type(ID),
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 10,
-		},
-
-		sinceId: {
-			validator: $.optional.type(ID),
-		},
-
-		untilId: {
-			validator: $.optional.type(ID),
-		},
-	},
 
 	errors: {
 		noSuchClip: {
@@ -43,17 +22,29 @@ export const meta = {
 	},
 
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'Note',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		clipId: { type: 'string', format: 'misskey:id' },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+		sinceId: { type: 'string', format: 'misskey:id' },
+		untilId: { type: 'string', format: 'misskey:id' },
+	},
+	required: ['clipId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const clip = await Clips.findOne({
 		id: ps.clipId,
 	});
@@ -86,7 +77,7 @@ export default define(meta, async (ps, user) => {
 	}
 
 	const notes = await query
-		.take(ps.limit!)
+		.take(ps.limit)
 		.getMany();
 
 	return await Notes.packMany(notes, user);

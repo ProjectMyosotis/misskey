@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { ApiError } from '../../error';
 import { getUser } from '../../common/getters';
@@ -11,44 +9,16 @@ import { readUserMessagingMessage, readGroupMessagingMessage, deliverReadActivit
 export const meta = {
 	tags: ['messaging'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'read:messaging',
 
-	params: {
-		userId: {
-			validator: $.optional.type(ID),
-		},
-
-		groupId: {
-			validator: $.optional.type(ID),
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 10,
-		},
-
-		sinceId: {
-			validator: $.optional.type(ID),
-		},
-
-		untilId: {
-			validator: $.optional.type(ID),
-		},
-
-		markAsRead: {
-			validator: $.optional.bool,
-			default: true,
-		},
-	},
-
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'MessagingMessage',
 		},
 	},
@@ -72,9 +42,23 @@ export const meta = {
 			id: 'a053a8dd-a491-4718-8f87-50775aad9284',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		userId: { type: 'string', format: 'misskey:id' },
+		groupId: { type: 'string', format: 'misskey:id' },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+		sinceId: { type: 'string', format: 'misskey:id' },
+		untilId: { type: 'string', format: 'misskey:id' },
+		markAsRead: { type: 'boolean', default: true },
+	},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	if (ps.userId != null) {
 		// Fetch recipient (user)
 		const recipient = await getUser(ps.userId).catch(e => {
@@ -96,7 +80,7 @@ export default define(meta, async (ps, user) => {
 			.setParameter('meId', user.id)
 			.setParameter('recipientId', recipient.id);
 
-		const messages = await query.take(ps.limit!).getMany();
+		const messages = await query.take(ps.limit).getMany();
 
 		// Mark all as read
 		if (ps.markAsRead) {
@@ -132,7 +116,7 @@ export default define(meta, async (ps, user) => {
 		const query = makePaginationQuery(MessagingMessages.createQueryBuilder('message'), ps.sinceId, ps.untilId)
 			.andWhere(`message.groupId = :groupId`, { groupId: recipientGroup.id });
 
-		const messages = await query.take(ps.limit!).getMany();
+		const messages = await query.take(ps.limit).getMany();
 
 		// Mark all as read
 		if (ps.markAsRead) {

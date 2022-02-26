@@ -37,7 +37,9 @@ export async function downloadUrl(url: string, path: string): Promise<void> {
 			https: httpsAgent,
 		},
 		http2: false,	// default
-		retry: 0,
+		retry: {
+			limit: 0,
+		},
 	}).on('response', (res: Got.Response) => {
 		const contentLength = res.headers['content-length'];
 		if (contentLength != null) {
@@ -65,4 +67,15 @@ export async function downloadUrl(url: string, path: string): Promise<void> {
 	}
 
 	logger.succ(`Download finished: ${chalk.cyan(url)}`);
+}
+
+function isPrivateIp(ip: string): boolean {
+	for (const net of config.allowedPrivateNetworks || []) {
+		const cidr = new IPCIDR(net);
+		if (cidr.contains(ip)) {
+			return false;
+		}
+	}
+
+	return PrivateIp(ip);
 }

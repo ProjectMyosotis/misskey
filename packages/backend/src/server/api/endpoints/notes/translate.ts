@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { getNote } from '../../common/getters';
 import { ApiError } from '../../error';
@@ -13,20 +11,11 @@ import { Notes } from '@/models';
 export const meta = {
 	tags: ['notes'],
 
-	requireCredential: false as const,
-
-	params: {
-		noteId: {
-			validator: $.type(ID),
-		},
-		targetLang: {
-			validator: $.str,
-		},
-	},
+	requireCredential: false,
 
 	res: {
-		type: 'object' as const,
-		optional: false as const, nullable: false as const,
+		type: 'object',
+		optional: false, nullable: false,
 	},
 
 	errors: {
@@ -36,9 +25,19 @@ export const meta = {
 			id: 'bea9b03f-36e0-49c5-a4db-627a029f8971',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		noteId: { type: 'string', format: 'misskey:id' },
+		targetLang: { type: 'string' },
+	},
+	required: ['noteId', 'targetLang'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const note = await getNote(ps.noteId).catch(e => {
 		if (e.id === '9725d0ce-ba28-4dde-95a7-2cbb2c15de24') throw new ApiError(meta.errors.noSuchNote);
 		throw e;

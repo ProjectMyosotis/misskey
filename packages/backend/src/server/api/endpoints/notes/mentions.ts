@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import read from '@/services/note/read';
 import { Notes, Followings } from '@/models/index';
@@ -13,44 +11,33 @@ import { generateMutedNoteThreadQuery } from '../../common/generate-muted-note-t
 export const meta = {
 	tags: ['notes'],
 
-	requireCredential: true as const,
-
-	params: {
-		following: {
-			validator: $.optional.bool,
-			default: false,
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 10,
-		},
-
-		sinceId: {
-			validator: $.optional.type(ID),
-		},
-
-		untilId: {
-			validator: $.optional.type(ID),
-		},
-
-		visibility: {
-			validator: $.optional.str,
-		},
-	},
+	requireCredential: true,
 
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'Note',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		following: { type: 'boolean', default: false },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+		sinceId: { type: 'string', format: 'misskey:id' },
+		untilId: { type: 'string', format: 'misskey:id' },
+		visibility: { type: 'string' },
+	},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const followingQuery = Followings.createQueryBuilder('following')
 		.select('following.followeeId')
 		.where('following.followerId = :followerId', { followerId: user.id });
@@ -80,7 +67,7 @@ export default define(meta, async (ps, user) => {
 		query.setParameters(followingQuery.getParameters());
 	}
 
-	const mentions = await query.take(ps.limit!).getMany();
+	const mentions = await query.take(ps.limit).getMany();
 
 	read(user.id, mentions);
 

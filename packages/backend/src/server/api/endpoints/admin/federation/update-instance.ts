@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import define from '../../../define';
 import { Instances } from '@/models/index';
 import { toPuny } from '@/misc/convert-host';
@@ -6,21 +5,21 @@ import { toPuny } from '@/misc/convert-host';
 export const meta = {
 	tags: ['admin'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 	requireModerator: true,
+} as const;
 
-	params: {
-		host: {
-			validator: $.str,
-		},
-
-		isSuspended: {
-			validator: $.bool,
-		},
+export const paramDef = {
+	type: 'object',
+	properties: {
+		host: { type: 'string' },
+		isSuspended: { type: 'boolean' },
 	},
-};
+	required: ['host', 'isSuspended'],
+} as const;
 
-export default define(meta, async (ps, me) => {
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, me) => {
 	const instance = await Instances.findOne({ host: toPuny(ps.host) });
 
 	if (instance == null) {

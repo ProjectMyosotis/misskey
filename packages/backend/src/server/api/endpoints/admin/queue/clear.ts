@@ -5,13 +5,18 @@ import { insertModerationLog } from '@/services/insert-moderation-log';
 export const meta = {
 	tags: ['admin'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 	requireModerator: true,
+} as const;
 
-	params: {},
-};
+export const paramDef = {
+	type: 'object',
+	properties: {},
+	required: [],
+} as const;
 
-export default define(meta, async (ps, me) => {
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, me) => {
 	destroy();
 
 	insertModerationLog(me, 'clearQueue');

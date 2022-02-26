@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import { publishMainStream } from '@/services/stream';
 import define from '../define';
 import rndstr from 'rndstr';
@@ -11,29 +10,29 @@ import { genId } from '@/misc/gen-id';
 import { IsNull } from 'typeorm';
 
 export const meta = {
-	requireCredential: false as const,
+	requireCredential: false,
 
 	limit: {
 		duration: ms('1hour'),
 		max: 3,
 	},
 
-	params: {
-		username: {
-			validator: $.str,
-		},
-
-		email: {
-			validator: $.str,
-		},
-	},
-
 	errors: {
 
 	},
-};
+} as const;
 
-export default define(meta, async (ps) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		username: { type: 'string' },
+		email: { type: 'string' },
+	},
+	required: ['username', 'email'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps) => {
 	const user = await Users.findOne({
 		usernameLower: ps.username.toLowerCase(),
 		host: IsNull(),

@@ -5,12 +5,19 @@ import { Notifications } from '@/models/index';
 export const meta = {
 	tags: ['notifications', 'account'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:notifications',
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	// Update documents
 	await Notifications.update({
 		notifieeId: user.id,

@@ -15,6 +15,10 @@ export function convertSchemaToOpenApiSchema(schema: Schema) {
 		res.items = convertSchemaToOpenApiSchema(schema.items);
 	}
 
+	if (schema.anyOf) res.anyOf = schema.anyOf.map(convertSchemaToOpenApiSchema);
+	if (schema.oneOf) res.oneOf = schema.oneOf.map(convertSchemaToOpenApiSchema);
+	if (schema.allOf) res.allOf = schema.allOf.map(convertSchemaToOpenApiSchema);
+
 	if (schema.ref) {
 		res.$ref = `#/components/schemas/${schema.ref}`;
 	}

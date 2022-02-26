@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import deleteFollowing from '@/services/following/delete';
 import { Users, Followings, Notifications } from '@/models/index';
@@ -11,17 +9,20 @@ import { publishUserEvent } from '@/services/stream';
 export const meta = {
 	tags: ['admin'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 	requireModerator: true,
+} as const;
 
-	params: {
-		userId: {
-			validator: $.type(ID),
-		},
+export const paramDef = {
+	type: 'object',
+	properties: {
+		userId: { type: 'string', format: 'misskey:id' },
 	},
-};
+	required: ['userId'],
+} as const;
 
-export default define(meta, async (ps, me) => {
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, me) => {
 	const user = await Users.findOne(ps.userId as string);
 
 	if (user == null) {

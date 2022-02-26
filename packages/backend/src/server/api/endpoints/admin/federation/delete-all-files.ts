@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import define from '../../../define';
 import { deleteFile } from '@/services/drive/delete-file';
 import { DriveFiles } from '@/models/index';
@@ -6,17 +5,20 @@ import { DriveFiles } from '@/models/index';
 export const meta = {
 	tags: ['admin'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 	requireModerator: true,
+} as const;
 
-	params: {
-		host: {
-			validator: $.str,
-		},
+export const paramDef = {
+	type: 'object',
+	properties: {
+		host: { type: 'string' },
 	},
-};
+	required: ['host'],
+} as const;
 
-export default define(meta, async (ps, me) => {
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, me) => {
 	const files = await DriveFiles.find({
 		userHost: ps.host,
 	});

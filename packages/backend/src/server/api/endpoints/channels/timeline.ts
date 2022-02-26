@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { ApiError } from '../../error';
 import { Notes, Channels } from '@/models/index';
@@ -9,41 +7,14 @@ import { activeUsersChart } from '@/services/chart/index';
 export const meta = {
 	tags: ['notes', 'channels'],
 
-	requireCredential: false as const,
-
-	params: {
-		channelId: {
-			validator: $.type(ID),
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 10,
-		},
-
-		sinceId: {
-			validator: $.optional.type(ID),
-		},
-
-		untilId: {
-			validator: $.optional.type(ID),
-		},
-
-		sinceDate: {
-			validator: $.optional.num,
-		},
-
-		untilDate: {
-			validator: $.optional.num,
-		},
-	},
+	requireCredential: false,
 
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'Note',
 		},
 	},
@@ -55,9 +26,23 @@ export const meta = {
 			id: '4d0eeeba-a02c-4c3c-9966-ef60d38d2e7f',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		channelId: { type: 'string', format: 'misskey:id' },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+		sinceId: { type: 'string', format: 'misskey:id' },
+		untilId: { type: 'string', format: 'misskey:id' },
+		sinceDate: { type: 'integer' },
+		untilDate: { type: 'integer' },
+	},
+	required: ['channelId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const channel = await Channels.findOne({
 		id: ps.channelId,
 	});
@@ -77,9 +62,9 @@ export default define(meta, async (ps, user) => {
 		.leftJoinAndSelect('note.channel', 'channel');
 	//#endregion
 
-	const timeline = await query.take(ps.limit!).getMany();
+	const timeline = await query.take(ps.limit).getMany();
 
-	if (user) activeUsersChart.update(user);
+	if (user) activeUsersChart.read(user);
 
 	return await Notes.packMany(timeline, user);
 });

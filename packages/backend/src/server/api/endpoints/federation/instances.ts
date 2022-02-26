@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import config from '@/config/index';
 import define from '../../define';
 import { Instances } from '@/models/index';
@@ -7,64 +6,38 @@ import { fetchMeta } from '@/misc/fetch-meta';
 export const meta = {
 	tags: ['federation'],
 
-	requireCredential: false as const,
-
-	params: {
-		host: {
-			validator: $.optional.nullable.str,
-		},
-
-		blocked: {
-			validator: $.optional.nullable.bool,
-		},
-
-		notResponding: {
-			validator: $.optional.nullable.bool,
-		},
-
-		suspended: {
-			validator: $.optional.nullable.bool,
-		},
-
-		federating: {
-			validator: $.optional.nullable.bool,
-		},
-
-		subscribing: {
-			validator: $.optional.nullable.bool,
-		},
-
-		publishing: {
-			validator: $.optional.nullable.bool,
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 30,
-		},
-
-		offset: {
-			validator: $.optional.num.min(0),
-			default: 0,
-		},
-
-		sort: {
-			validator: $.optional.str,
-		},
-	},
+	requireCredential: false,
 
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'FederationInstance',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, me) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		host: { type: 'string', nullable: true },
+		blocked: { type: 'boolean', nullable: true },
+		notResponding: { type: 'boolean', nullable: true },
+		suspended: { type: 'boolean', nullable: true },
+		federating: { type: 'boolean', nullable: true },
+		subscribing: { type: 'boolean', nullable: true },
+		publishing: { type: 'boolean', nullable: true },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 30 },
+		offset: { type: 'integer', default: 0 },
+		sort: { type: 'string' },
+	},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, me) => {
 	const query = Instances.createQueryBuilder('instance');
 
 	switch (ps.sort) {
@@ -143,7 +116,7 @@ export default define(meta, async (ps, me) => {
 		query.andWhere('instance.host like :host', { host: '%' + ps.host.toLowerCase() + '%' });
 	}
 
-	const instances = await query.take(ps.limit!).skip(ps.offset).getMany();
+	const instances = await query.take(ps.limit).skip(ps.offset).getMany();
 
-	return instances;
+	return await Instances.packMany(instances);
 });

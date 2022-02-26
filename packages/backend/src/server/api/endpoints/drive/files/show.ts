@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../../define';
 import { ApiError } from '../../../error';
 import { DriveFile } from '@/models/entities/drive-file';
@@ -8,23 +6,13 @@ import { DriveFiles } from '@/models/index';
 export const meta = {
 	tags: ['drive'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'read:drive',
 
-	params: {
-		fileId: {
-			validator: $.optional.type(ID),
-		},
-
-		url: {
-			validator: $.optional.str,
-		},
-	},
-
 	res: {
-		type: 'object' as const,
-		optional: false as const, nullable: false as const,
+		type: 'object',
+		optional: false, nullable: false,
 		ref: 'DriveFile',
 	},
 
@@ -47,9 +35,19 @@ export const meta = {
 			id: '89674805-722c-440c-8d88-5641830dc3e4',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		fileId: { type: 'string', format: 'misskey:id' },
+		url: { type: 'string' },
+	},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	let file: DriveFile | undefined;
 
 	if (ps.fileId) {

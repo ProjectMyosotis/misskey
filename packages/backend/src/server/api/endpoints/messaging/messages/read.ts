@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../../define';
 import { ApiError } from '../../../error';
 import { MessagingMessages } from '@/models/index';
@@ -8,15 +6,9 @@ import { readUserMessagingMessage, readGroupMessagingMessage } from '../../../co
 export const meta = {
 	tags: ['messaging'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:messaging',
-
-	params: {
-		messageId: {
-			validator: $.type(ID),
-		},
-	},
 
 	errors: {
 		noSuchMessage: {
@@ -25,9 +17,18 @@ export const meta = {
 			id: '86d56a2f-a9c3-4afb-b13c-3e9bfef9aa14',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		messageId: { type: 'string', format: 'misskey:id' },
+	},
+	required: ['messageId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const message = await MessagingMessages.findOne(ps.messageId);
 
 	if (message == null) {

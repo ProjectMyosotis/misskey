@@ -6,13 +6,6 @@ import { Packed } from '@/misc/schema';
 
 @EntityRepository(DriveFolder)
 export class DriveFolderRepository extends Repository<DriveFolder> {
-	public validateFolderName(name: string): boolean {
-		return (
-			(name.trim().length > 0) &&
-			(name.length <= 200)
-		);
-	}
-
 	public async pack(
 		src: DriveFolder['id'] | DriveFolder,
 		options?: {
@@ -48,44 +41,3 @@ export class DriveFolderRepository extends Repository<DriveFolder> {
 		});
 	}
 }
-
-export const packedDriveFolderSchema = {
-	type: 'object' as const,
-	optional: false as const, nullable: false as const,
-	properties: {
-		id: {
-			type: 'string' as const,
-			optional: false as const, nullable: false as const,
-			format: 'id',
-			example: 'xxxxxxxxxx',
-		},
-		createdAt: {
-			type: 'string' as const,
-			optional: false as const, nullable: false as const,
-			format: 'date-time',
-		},
-		name: {
-			type: 'string' as const,
-			optional: false as const, nullable: false as const,
-		},
-		foldersCount: {
-			type: 'number' as const,
-			optional: true as const, nullable: false as const,
-		},
-		filesCount: {
-			type: 'number' as const,
-			optional: true as const, nullable: false as const,
-		},
-		parentId: {
-			type: 'string' as const,
-			optional: false as const, nullable: true as const,
-			format: 'id',
-			example: 'xxxxxxxxxx',
-		},
-		parent: {
-			type: 'object' as const,
-			optional: true as const, nullable: true as const,
-			ref: 'DriveFolder' as const,
-		},
-	},
-};

@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { ApiError } from '../../error';
 import { getUser } from '../../common/getters';
@@ -9,15 +7,9 @@ import { publishUserEvent } from '@/services/stream';
 export const meta = {
 	tags: ['account'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:mutes',
-
-	params: {
-		userId: {
-			validator: $.type(ID),
-		},
-	},
 
 	errors: {
 		noSuchUser: {
@@ -38,9 +30,18 @@ export const meta = {
 			id: '5467d020-daa9-4553-81e1-135c0c35a96d',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		userId: { type: 'string', format: 'misskey:id' },
+	},
+	required: ['userId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const muter = user;
 
 	// Check if the mutee is yourself

@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { ApiError } from '../../error';
 import { Channels, ChannelFollowings } from '@/models/index';
@@ -8,15 +6,9 @@ import { publishUserEvent } from '@/services/stream';
 export const meta = {
 	tags: ['channels'],
 
-	requireCredential: true as const,
+	requireCredential: true,
 
 	kind: 'write:channels',
-
-	params: {
-		channelId: {
-			validator: $.type(ID),
-		},
-	},
 
 	errors: {
 		noSuchChannel: {
@@ -25,9 +17,18 @@ export const meta = {
 			id: '19959ee9-0153-4c51-bbd9-a98c49dc59d6',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		channelId: { type: 'string', format: 'misskey:id' },
+	},
+	required: ['channelId'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const channel = await Channels.findOne({
 		id: ps.channelId,
 	});

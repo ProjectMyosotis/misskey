@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../../define';
 import { fetchMeta } from '@/misc/fetch-meta';
 import { ApiError } from '../../error';
@@ -15,39 +13,12 @@ import { generateBlockedUserQuery } from '../../common/generate-block-query';
 export const meta = {
 	tags: ['notes'],
 
-	params: {
-		withFiles: {
-			validator: $.optional.bool,
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 10,
-		},
-
-		sinceId: {
-			validator: $.optional.type(ID),
-		},
-
-		untilId: {
-			validator: $.optional.type(ID),
-		},
-
-		sinceDate: {
-			validator: $.optional.num,
-		},
-
-		untilDate: {
-			validator: $.optional.num,
-		},
-	},
-
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'Note',
 		},
 	},
@@ -59,9 +30,23 @@ export const meta = {
 			id: '0332fc13-6ab2-4427-ae80-a9fadffd1a6b',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps, user) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		withFiles: { type: 'boolean' },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+		sinceId: { type: 'string', format: 'misskey:id' },
+		untilId: { type: 'string', format: 'misskey:id' },
+		sinceDate: { type: 'integer' },
+		untilDate: { type: 'integer' },
+	},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps, user) => {
 	const m = await fetchMeta();
 	if (m.disableGlobalTimeline) {
 		if (user == null || (!user.isAdmin && !user.isModerator)) {
@@ -91,11 +76,11 @@ export default define(meta, async (ps, user) => {
 	}
 	//#endregion
 
-	const timeline = await query.take(ps.limit!).getMany();
+	const timeline = await query.take(ps.limit).getMany();
 
 	process.nextTick(() => {
 		if (user) {
-			activeUsersChart.update(user);
+			activeUsersChart.read(user);
 		}
 	});
 

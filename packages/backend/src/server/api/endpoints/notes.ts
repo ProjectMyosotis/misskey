@@ -1,5 +1,3 @@
-import $ from 'cafy';
-import { ID } from '@/misc/cafy-id';
 import define from '../define';
 import { makePaginationQuery } from '../common/make-pagination-query';
 import { Notes } from '@/models/index';
@@ -7,53 +5,34 @@ import { Notes } from '@/models/index';
 export const meta = {
 	tags: ['notes'],
 
-	params: {
-		local: {
-			validator: $.optional.bool,
-		},
-
-		reply: {
-			validator: $.optional.bool,
-		},
-
-		renote: {
-			validator: $.optional.bool,
-		},
-
-		withFiles: {
-			validator: $.optional.bool,
-		},
-
-		poll: {
-			validator: $.optional.bool,
-		},
-
-		limit: {
-			validator: $.optional.num.range(1, 100),
-			default: 10,
-		},
-
-		sinceId: {
-			validator: $.optional.type(ID),
-		},
-
-		untilId: {
-			validator: $.optional.type(ID),
-		},
-	},
-
 	res: {
-		type: 'array' as const,
-		optional: false as const, nullable: false as const,
+		type: 'array',
+		optional: false, nullable: false,
 		items: {
-			type: 'object' as const,
-			optional: false as const, nullable: false as const,
+			type: 'object',
+			optional: false, nullable: false,
 			ref: 'Note',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		local: { type: 'boolean' },
+		reply: { type: 'boolean' },
+		renote: { type: 'boolean' },
+		withFiles: { type: 'boolean' },
+		poll: { type: 'boolean' },
+		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+		sinceId: { type: 'string', format: 'misskey:id' },
+		untilId: { type: 'string', format: 'misskey:id' },
+	},
+	required: [],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps) => {
 	const query = makePaginationQuery(Notes.createQueryBuilder('note'), ps.sinceId, ps.untilId)
 		.andWhere(`note.visibility = 'public'`)
 		.andWhere(`note.localOnly = FALSE`)
@@ -88,7 +67,7 @@ export default define(meta, async (ps) => {
 	//	query.isBot = bot;
 	//}
 
-	const notes = await query.take(ps.limit!).getMany();
+	const notes = await query.take(ps.limit).getMany();
 
 	return await Notes.packMany(notes);
 });

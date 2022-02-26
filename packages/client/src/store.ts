@@ -17,7 +17,7 @@ export const defaultStore = markRaw(new Storage('base', {
 	},
 	keepCw: {
 		where: 'account',
-		default: false
+		default: true
 	},
 	showFullAcct: {
 		where: 'account',
@@ -42,6 +42,10 @@ export const defaultStore = markRaw(new Storage('base', {
 	pastedFileName: {
 		where: 'account',
 		default: 'yyyy-MM-dd HH-mm-ss [{{number}}]'
+	},
+	keepOriginalUploading: {
+		where: 'account',
+		default: false
 	},
 	memo: {
 		where: 'account',
@@ -97,11 +101,15 @@ export const defaultStore = markRaw(new Storage('base', {
 	tl: {
 		where: 'deviceAccount',
 		default: {
-			src: 'home',
+			src: 'home' as 'home' | 'local' | 'social' | 'global',
 			arg: null
 		}
 	},
 
+	overridedDeviceKind: {
+		where: 'device',
+		default: null as null | 'smartphone' | 'tablet' | 'desktop',
+	},
 	serverDisconnectedBehavior: {
 		where: 'device',
 		default: 'quiet' as 'quiet' | 'reload' | 'dialog'
@@ -160,7 +168,7 @@ export const defaultStore = markRaw(new Storage('base', {
 	},
 	useReactionPickerForContextMenu: {
 		where: 'device',
-		default: true
+		default: false
 	},
 	showGapBetweenNotesInTimeline: {
 		where: 'device',
@@ -173,6 +181,10 @@ export const defaultStore = markRaw(new Storage('base', {
 	instanceTicker: {
 		where: 'device',
 		default: 'remote' as 'none' | 'remote' | 'always'
+	},
+	reactionPickerSize: {
+		where: 'device',
+		default: 1
 	},
 	reactionPickerWidth: {
 		where: 'device',
@@ -255,10 +267,6 @@ export class ColdDeviceStorage {
 		sound_chatBg: { type: 'syuilo/waon', volume: 1 },
 		sound_antenna: { type: 'syuilo/triple', volume: 1 },
 		sound_channel: { type: 'syuilo/square-pico', volume: 1 },
-		sound_reversiPutBlack: { type: 'syuilo/kick', volume: 0.3 },
-		sound_reversiPutWhite: { type: 'syuilo/snare', volume: 0.3 },
-		roomGraphicsQuality: 'medium' as 'cheep' | 'low' | 'medium' | 'high' | 'ultra',
-		roomUseOrthographicCamera: true,
 	};
 
 	public static watchers = [];

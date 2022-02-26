@@ -1,4 +1,3 @@
-import $ from 'cafy';
 import define from '../../../define';
 import { ApiError } from '../../../error';
 import { Apps, AuthSessions, AccessTokens, Users } from '@/models/index';
@@ -6,31 +5,21 @@ import { Apps, AuthSessions, AccessTokens, Users } from '@/models/index';
 export const meta = {
 	tags: ['auth'],
 
-	requireCredential: false as const,
-
-	params: {
-		appSecret: {
-			validator: $.str,
-		},
-
-		token: {
-			validator: $.str,
-		},
-	},
+	requireCredential: false,
 
 	res: {
-		type: 'object' as const,
-		optional: false as const, nullable: false as const,
+		type: 'object',
+		optional: false, nullable: false,
 		properties: {
 			accessToken: {
-				type: 'string' as const,
-				optional: false as const, nullable: false as const,
+				type: 'string',
+				optional: false, nullable: false,
 			},
 
 			user: {
-				type: 'object' as const,
-				optional: false as const, nullable: false as const,
-				ref: 'User',
+				type: 'object',
+				optional: false, nullable: false,
+				ref: 'UserDetailedNotMe',
 			},
 		},
 	},
@@ -54,9 +43,19 @@ export const meta = {
 			id: '8c8a4145-02cc-4cca-8e66-29ba60445a8e',
 		},
 	},
-};
+} as const;
 
-export default define(meta, async (ps) => {
+export const paramDef = {
+	type: 'object',
+	properties: {
+		appSecret: { type: 'string' },
+		token: { type: 'string' },
+	},
+	required: ['appSecret', 'token'],
+} as const;
+
+// eslint-disable-next-line import/no-default-export
+export default define(meta, paramDef, async (ps) => {
 	// Lookup app
 	const app = await Apps.findOne({
 		secret: ps.appSecret,
