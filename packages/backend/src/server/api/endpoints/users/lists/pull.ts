@@ -1,8 +1,8 @@
-import { publishUserListStream } from '@/services/stream';
-import define from '../../../define';
-import { ApiError } from '../../../error';
-import { getUser } from '../../../common/getters';
-import { UserLists, UserListJoinings, Users } from '@/models/index';
+import { publishUserListStream } from '@/services/stream.js';
+import define from '../../../define.js';
+import { ApiError } from '../../../error.js';
+import { getUser } from '../../../common/getters.js';
+import { UserLists, UserListJoinings, Users } from '@/models/index.js';
 
 export const meta = {
 	tags: ['lists', 'users'],
@@ -38,7 +38,7 @@ export const paramDef = {
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, me) => {
 	// Fetch the list
-	const userList = await UserLists.findOne({
+	const userList = await UserLists.findOneBy({
 		id: ps.listId,
 		userId: me.id,
 	});

@@ -1,7 +1,7 @@
-import define from '../../../define';
-import { ApiError } from '../../../error';
-import { MessagingMessages } from '@/models/index';
-import { readUserMessagingMessage, readGroupMessagingMessage } from '../../../common/read-messaging-message';
+import define from '../../../define.js';
+import { ApiError } from '../../../error.js';
+import { MessagingMessages } from '@/models/index.js';
+import { readUserMessagingMessage, readGroupMessagingMessage } from '../../../common/read-messaging-message.js';
 
 export const meta = {
 	tags: ['messaging'],
@@ -29,7 +29,7 @@ export const paramDef = {
 
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, user) => {
-	const message = await MessagingMessages.findOne(ps.messageId);
+	const message = await MessagingMessages.findOneBy({ id: ps.messageId });
 
 	if (message == null) {
 		throw new ApiError(meta.errors.noSuchMessage);

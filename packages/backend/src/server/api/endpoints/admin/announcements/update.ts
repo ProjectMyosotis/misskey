@@ -1,6 +1,6 @@
-import define from '../../../define';
-import { Announcements } from '@/models/index';
-import { ApiError } from '../../../error';
+import define from '../../../define.js';
+import { Announcements } from '@/models/index.js';
+import { ApiError } from '../../../error.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -30,7 +30,7 @@ export const paramDef = {
 
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, me) => {
-	const announcement = await Announcements.findOne(ps.id);
+	const announcement = await Announcements.findOneBy({ id: ps.id });
 
 	if (announcement == null) throw new ApiError(meta.errors.noSuchAnnouncement);
 

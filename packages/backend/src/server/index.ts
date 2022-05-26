@@ -2,28 +2,32 @@
  * Core Server
  */
 
-import * as fs from 'fs';
-import * as http from 'http';
-import * as http2 from 'http2';
-import * as https from 'https';
-import * as Koa from 'koa';
-import * as Router from '@koa/router';
-import * as mount from 'koa-mount';
-import * as koaLogger from 'koa-logger';
+import cluster from 'node:cluster';
+import * as fs from 'node:fs';
+import * as http from 'node:http';
+import Koa from 'koa';
+import Router from '@koa/router';
+import mount from 'koa-mount';
+import koaLogger from 'koa-logger';
 import * as slow from 'koa-slow';
 
-import activityPub from './activitypub';
-import nodeinfo from './nodeinfo';
-import wellKnown from './well-known';
-import config from '@/config/index';
-import apiServer from './api/index';
-import Logger from '@/services/logger';
-import { envOption } from '../env';
-import { UserProfiles, Users } from '@/models/index';
-import { genIdenticon } from '@/misc/gen-identicon';
-import { createTemp } from '@/misc/create-temp';
-import { publishMainStream } from '@/services/stream';
-import * as Acct from 'misskey-js/built/acct';
+import { IsNull } from 'typeorm';
+import config from '@/config/index.js';
+import Logger from '@/services/logger.js';
+import { UserProfiles, Users } from '@/models/index.js';
+import { genIdenticon } from '@/misc/gen-identicon.js';
+import { createTemp } from '@/misc/create-temp.js';
+import { publishMainStream } from '@/services/stream.js';
+import * as Acct from '@/misc/acct.js';
+import { envOption } from '../env.js';
+import activityPub from './activitypub.js';
+import nodeinfo from './nodeinfo.js';
+import wellKnown from './well-known.js';
+import apiServer from './api/index.js';
+import fileServer from './file/index.js';
+import proxyServer from './proxy/index.js';
+import webServer from './web/index.js';
+import { initializeStreamingServer } from './api/streaming.js';
 
 export const serverLogger = new Logger('server', 'gray', false);
 
@@ -55,8 +59,8 @@ if (config.url.startsWith('https') && !config.disableHsts) {
 }
 
 app.use(mount('/api', apiServer));
-app.use(mount('/files', require('./file')));
-app.use(mount('/proxy', require('./proxy')));
+app.use(mount('/files', fileServer));
+app.use(mount('/proxy', proxyServer));
 
 // Init router
 const router = new Router();
@@ -69,27 +73,30 @@ router.use(wellKnown.routes());
 router.get('/avatar/@:acct', async ctx => {
 	const { username, host } = Acct.parse(ctx.params.acct);
 	const user = await Users.findOne({
-		usernameLower: username.toLowerCase(),
-		host: host === config.host ? null : host,
-		isSuspended: false,
+		where: {
+			usernameLower: username.toLowerCase(),
+			host: (host == null) || (host === config.host) ? IsNull() : host,
+			isSuspended: false,
+		},
+		relations: ['avatar'],
 	});
 
 	if (user) {
-		ctx.redirect(Users.getAvatarUrl(user));
+		ctx.redirect(Users.getAvatarUrlSync(user));
 	} else {
 		ctx.redirect('/static-assets/user-unknown.png');
 	}
 });
 
 router.get('/identicon/:x', async ctx => {
-	const [temp] = await createTemp();
+	const [temp, cleanup] = await createTemp();
 	await genIdenticon(ctx.params.x, fs.createWriteStream(temp));
 	ctx.set('Content-Type', 'image/png');
-	ctx.body = fs.createReadStream(temp);
+	ctx.body = fs.createReadStream(temp).on('close', () => cleanup());
 });
 
 router.get('/verify-email/:code', async ctx => {
-	const profile = await UserProfiles.findOne({
+	const profile = await UserProfiles.findOneBy({
 		emailVerifyCode: ctx.params.code,
 	});
 
@@ -114,29 +121,18 @@ router.get('/verify-email/:code', async ctx => {
 // Register router
 app.use(router.routes());
 
-app.use(mount(require('./web')));
+app.use(mount(webServer));
 
 function createServer() {
-	if (config.https) {
-		const certs: any = {};
-		for (const k of Object.keys(config.https)) {
-			certs[k] = fs.readFileSync(config.https[k]);
-		}
-		certs['allowHTTP1'] = true;
-		return http2.createSecureServer(certs, app.callback()) as https.Server;
-	} else {
-		return http.createServer(app.callback());
-	}
+	return http.createServer(app.callback());
 }
 
 // For testing
 export const startServer = () => {
 	const server = createServer();
 
-	// Init stream server
-	require('./api/streaming')(server);
+	initializeStreamingServer(server);
 
-	// Listen
 	server.listen(config.port);
 
 	return server;
@@ -145,9 +141,28 @@ export const startServer = () => {
 export default () => new Promise(resolve => {
 	const server = createServer();
 
-	// Init stream server
-	require('./api/streaming')(server);
+	initializeStreamingServer(server);
 
-	// Listen
+	server.on('error', e => {
+		switch ((e as any).code) {
+			case 'EACCES':
+				serverLogger.error(`You do not have permission to listen on port ${config.port}.`);
+				break;
+			case 'EADDRINUSE':
+				serverLogger.error(`Port ${config.port} is already in use by another process.`);
+				break;
+			default:
+				serverLogger.error(e);
+				break;
+		}
+
+		if (cluster.isWorker) {
+			process.send!('listenFailed');
+		} else {
+			// disableClustering
+			process.exit(1);
+		}
+	});
+
 	server.listen(config.port, resolve);
 });

@@ -1,7 +1,7 @@
-import define from '../../define';
-import { fetchMeta } from '@/misc/fetch-meta';
-import { genId } from '@/misc/gen-id';
-import { SwSubscriptions } from '@/models/index';
+import define from '../../define.js';
+import { fetchMeta } from '@/misc/fetch-meta.js';
+import { genId } from '@/misc/gen-id.js';
+import { SwSubscriptions } from '@/models/index.js';
 
 export const meta = {
 	tags: ['account'],
@@ -38,7 +38,7 @@ export const paramDef = {
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, user) => {
 	// if already subscribed
-	const exist = await SwSubscriptions.findOne({
+	const exist = await SwSubscriptions.findOneBy({
 		userId: user.id,
 		endpoint: ps.endpoint,
 		auth: ps.auth,

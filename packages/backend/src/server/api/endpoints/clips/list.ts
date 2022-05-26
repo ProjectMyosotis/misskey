@@ -1,5 +1,5 @@
-import define from '../../define';
-import { Clips } from '@/models/index';
+import define from '../../define.js';
+import { Clips } from '@/models/index.js';
 
 export const meta = {
 	tags: ['clips', 'account'],
@@ -27,7 +27,7 @@ export const paramDef = {
 
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, me) => {
-	const clips = await Clips.find({
+	const clips = await Clips.findBy({
 		userId: me.id,
 	});
 

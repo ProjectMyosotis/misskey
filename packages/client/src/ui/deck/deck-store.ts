@@ -1,8 +1,9 @@
 import { throttle } from 'throttle-debounce';
 import { i18n } from '@/i18n';
 import { api } from '@/os';
-import { markRaw, watch } from 'vue';
+import { markRaw } from 'vue';
 import { Storage } from '../../pizzax';
+import { notificationTypes } from 'misskey-js';
 
 type ColumnWidget = {
 	name: string;
@@ -10,13 +11,18 @@ type ColumnWidget = {
 	data: Record<string, any>;
 };
 
-type Column = {
+export type Column = {
 	id: string;
 	type: string;
 	name: string | null;
 	width: number;
 	widgets?: ColumnWidget[];
 	active?: boolean;
+	flexible?: boolean;
+	antennaId?: string;
+	listId?: string;
+	includingTypes?: typeof notificationTypes[number][];
+	tl?: 'home' | 'local' | 'social' | 'global';
 };
 
 function copy<T>(x: T): T {
@@ -66,8 +72,8 @@ export const loadDeck = async () => {
 			scope: ['client', 'deck', 'profiles'],
 			key: deckStore.state.profile,
 		});
-	} catch (e) {
-		if (e.code === 'NO_SUCH_KEY') {
+	} catch (err) {
+		if (err.code === 'NO_SUCH_KEY') {
 			// 後方互換性のため
 			if (deckStore.state.profile === 'default') {
 				saveDeck();
@@ -88,7 +94,7 @@ export const loadDeck = async () => {
 			deckStore.set('layout', [['a'], ['b']]);
 			return;
 		}
-		throw e;
+		throw err;
 	}
 
 	deckStore.set('columns', deck.columns);
@@ -108,7 +114,7 @@ export const saveDeck = throttle(1000, () => {
 });
 
 export function addColumn(column: Column) {
-	if (column.name == undefined) column.name = null;
+	if (column.name === undefined) column.name = null;
 	deckStore.push('columns', column);
 	deckStore.push('layout', [column.id]);
 	saveDeck();
@@ -123,10 +129,10 @@ export function removeColumn(id: Column['id']) {
 }
 
 export function swapColumn(a: Column['id'], b: Column['id']) {
-	const aX = deckStore.state.layout.findIndex(ids => ids.indexOf(a) != -1);
-	const aY = deckStore.state.layout[aX].findIndex(id => id == a);
-	const bX = deckStore.state.layout.findIndex(ids => ids.indexOf(b) != -1);
-	const bY = deckStore.state.layout[bX].findIndex(id => id == b);
+	const aX = deckStore.state.layout.findIndex(ids => ids.indexOf(a) !== -1);
+	const aY = deckStore.state.layout[aX].findIndex(id => id === a);
+	const bX = deckStore.state.layout.findIndex(ids => ids.indexOf(b) !== -1);
+	const bY = deckStore.state.layout[bX].findIndex(id => id === b);
 	const layout = copy(deckStore.state.layout);
 	layout[aX][aY] = b;
 	layout[bX][bY] = a;
@@ -253,7 +259,7 @@ export function removeColumnWidget(id: Column['id'], widget: ColumnWidget) {
 	const columnIndex = deckStore.state.columns.findIndex(c => c.id === id);
 	const column = copy(deckStore.state.columns[columnIndex]);
 	if (column == null) return;
-	column.widgets = column.widgets.filter(w => w.id != widget.id);
+	column.widgets = column.widgets.filter(w => w.id !== widget.id);
 	columns[columnIndex] = column;
 	deckStore.set('columns', columns);
 	saveDeck();
@@ -270,14 +276,14 @@ export function setColumnWidgets(id: Column['id'], widgets: ColumnWidget[]) {
 	saveDeck();
 }
 
-export function updateColumnWidget(id: Column['id'], widgetId: string, data: any) {
+export function updateColumnWidget(id: Column['id'], widgetId: string, WidgetData: any) {
 	const columns = copy(deckStore.state.columns);
 	const columnIndex = deckStore.state.columns.findIndex(c => c.id === id);
 	const column = copy(deckStore.state.columns[columnIndex]);
 	if (column == null) return;
 	column.widgets = column.widgets.map(w => w.id === widgetId ? {
 		...w,
-		data: data
+		data: widgetData,
 	} : w);
 	columns[columnIndex] = column;
 	deckStore.set('columns', columns);

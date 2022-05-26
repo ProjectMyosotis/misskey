@@ -19,15 +19,15 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-	(e: 'closed'): void;
+	(ev: 'closed'): void;
 }>();
 
-const showing = ref(true);
 const zIndex = os.claimZIndex('high');
+let showing = $ref(true);
 
 onMounted(() => {
 	window.setTimeout(() => {
-		showing.value = false;
+		showing = false;
 	}, 4000);
 });
 </script>

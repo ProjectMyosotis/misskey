@@ -2,9 +2,9 @@
 <div
 	v-if="!muted"
 	v-show="!isDeleted"
+	ref="el"
 	v-hotkey="keymap"
 	v-size="{ max: [500, 450, 350, 300] }"
-	ref="el"
 	class="lxwezrsl _block"
 	:tabindex="!isDeleted ? '-1' : null"
 	:class="{ renote: isRenote }"
@@ -154,7 +154,18 @@ const props = defineProps<{
 
 const inChannel = inject('inChannel', null);
 
-const note = $ref(JSON.parse(JSON.stringify(props.note)));
+let note = $ref(JSON.parse(JSON.stringify(props.note)));
+
+// plugin
+if (noteViewInterruptors.length > 0) {
+	onMounted(async () => {
+		let result = JSON.parse(JSON.stringify(note));
+		for (const interruptor of noteViewInterruptors) {
+			result = await interruptor.handler(result);
+		}
+		note = result;
+	});
+}
 
 const isRenote = (
 	note.renote != null &&
@@ -168,7 +179,7 @@ const menuButton = ref<HTMLElement>();
 const renoteButton = ref<InstanceType<typeof XRenoteButton>>();
 const renoteTime = ref<HTMLElement>();
 const reactButton = ref<HTMLElement>();
-let appearNote = $ref(isRenote ? note.renote as misskey.entities.Note : note);
+let appearNote = $computed(() => isRenote ? note.renote as misskey.entities.Note : note);
 const isMyRenote = $i && ($i.id === note.userId);
 const showContent = ref(false);
 const isDeleted = ref(false);
@@ -186,7 +197,7 @@ const keymap = {
 	'q': () => renoteButton.value.renote(true),
 	'esc': blur,
 	'm|o': () => menu(true),
-	's': () => showContent.value != showContent.value,
+	's': () => showContent.value !== showContent.value,
 };
 
 useNoteCapture({

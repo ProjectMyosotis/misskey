@@ -1,6 +1,6 @@
-FROM node:16.13.2-alpine3.15 AS base
+FROM node:18.0.0-alpine3.15 AS base
 
-ENV NODE_ENV=production
+ARG NODE_ENV=production
 
 WORKDIR /misskey
 
@@ -12,17 +12,16 @@ ARG VERSION_HASH
 
 COPY . ./
 RUN apk add --no-cache $BUILD_DEPS && \
-    git submodule update --init && \
-    yarn install && \
-    node version-patch.js ${VERSION_HASH} && \
-    yarn build && \
-    rm -rf .git
+	git submodule update --init && \
+	yarn install && \
+	yarn build && \
+	rm -rf .git
 
 FROM base AS runner
 
 RUN apk add --no-cache \
-    ffmpeg \
-    tini
+	ffmpeg \
+	tini
 
 ENTRYPOINT ["/sbin/tini", "--"]
 
@@ -33,5 +32,6 @@ COPY --from=builder /misskey/packages/backend/built ./packages/backend/built
 COPY --from=builder /misskey/packages/client/node_modules ./packages/client/node_modules
 COPY . ./
 
+ENV NODE_ENV=production
 CMD ["npm", "run", "migrateandstart"]
 

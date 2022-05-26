@@ -2,7 +2,7 @@ process.env.NODE_ENV = 'test';
 
 import * as assert from 'assert';
 import * as childProcess from 'child_process';
-import { async, signup, request, post, react, connectStream, startServer, shutdownServer } from './utils';
+import { async, signup, request, post, react, connectStream, startServer, shutdownServer } from './utils.js';
 
 describe('Mute', () => {
 	let p: childProcess.ChildProcess;
@@ -25,7 +25,7 @@ describe('Mute', () => {
 
 	it('ミュート作成', async(async () => {
 		const res = await request('/mute/create', {
-			userId: carol.id
+			userId: carol.id,
 		}, alice);
 
 		assert.strictEqual(res.status, 204);
@@ -117,7 +117,7 @@ describe('Mute', () => {
 			const aliceNote = await post(alice);
 			const carolNote = await post(carol);
 			const bobNote = await post(bob, {
-				renoteId: carolNote.id
+				renoteId: carolNote.id,
 			});
 
 			const res = await request('/notes/local-timeline', {}, alice);

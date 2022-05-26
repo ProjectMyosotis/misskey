@@ -1,6 +1,6 @@
-import define from '../../../define';
-import deleteFollowing from '@/services/following/delete';
-import { Followings, Users } from '@/models/index';
+import define from '../../../define.js';
+import deleteFollowing from '@/services/following/delete.js';
+import { Followings, Users } from '@/models/index.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -19,13 +19,13 @@ export const paramDef = {
 
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, me) => {
-	const followings = await Followings.find({
+	const followings = await Followings.findBy({
 		followerHost: ps.host,
 	});
 
 	const pairs = await Promise.all(followings.map(f => Promise.all([
-		Users.findOneOrFail(f.followerId),
-		Users.findOneOrFail(f.followeeId),
+		Users.findOneByOrFail({ id: f.followerId }),
+		Users.findOneByOrFail({ id: f.followeeId }),
 	])));
 
 	for (const pair of pairs) {

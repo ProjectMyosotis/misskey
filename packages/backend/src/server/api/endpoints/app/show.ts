@@ -1,6 +1,6 @@
-import define from '../../define';
-import { ApiError } from '../../error';
-import { Apps } from '@/models/index';
+import define from '../../define.js';
+import { ApiError } from '../../error.js';
+import { Apps } from '@/models/index.js';
 
 export const meta = {
 	tags: ['app'],
@@ -33,7 +33,7 @@ export default define(meta, paramDef, async (ps, user, token) => {
 	const isSecure = user != null && token == null;
 
 	// Lookup app
-	const ap = await Apps.findOne(ps.appId);
+	const ap = await Apps.findOneBy({ id: ps.appId });
 
 	if (ap == null) {
 		throw new ApiError(meta.errors.noSuchApp);

@@ -1,36 +1,31 @@
-import * as Bull from 'bull';
-import * as tmp from 'tmp';
-import * as fs from 'fs';
+import Bull from 'bull';
+import * as fs from 'node:fs';
 
 import { ulid } from 'ulid';
-const mime = require('mime-types');
-const archiver = require('archiver');
-import { queueLogger } from '../../logger';
-import { addFile } from '@/services/drive/add-file';
+import mime from 'mime-types';
+import archiver from 'archiver';
+import { queueLogger } from '../../logger.js';
+import { addFile } from '@/services/drive/add-file.js';
 import { format as dateFormat } from 'date-fns';
-import { Users, Emojis } from '@/models/index';
-import {  } from '@/queue/types';
-import { downloadUrl } from '@/misc/download-url';
-import config from '@/config/index';
+import { Users, Emojis } from '@/models/index.js';
+import {  } from '@/queue/types.js';
+import { createTempDir } from '@/misc/create-temp.js';
+import { downloadUrl } from '@/misc/download-url.js';
+import config from '@/config/index.js';
+import { IsNull } from 'typeorm';
 
 const logger = queueLogger.createSubLogger('export-custom-emojis');
 
 export async function exportCustomEmojis(job: Bull.Job, done: () => void): Promise<void> {
 	logger.info(`Exporting custom emojis ...`);
 
-	const user = await Users.findOne(job.data.user.id);
+	const user = await Users.findOneBy({ id: job.data.user.id });
 	if (user == null) {
 		done();
 		return;
 	}
 
-	// Create temp dir
-	const [path, cleanup] = await new Promise<[string, () => void]>((res, rej) => {
-		tmp.dir((e, path, cleanup) => {
-			if (e) return rej(e);
-			res([path, cleanup]);
-		});
-	});
+	const [path, cleanup] = await createTempDir();
 
 	logger.info(`Temp dir is ${path}`);
 
@@ -57,7 +52,7 @@ export async function exportCustomEmojis(job: Bull.Job, done: () => void): Promi
 
 	const customEmojis = await Emojis.find({
 		where: {
-			host: null,
+			host: IsNull(),
 		},
 		order: {
 			id: 'ASC',
@@ -97,12 +92,7 @@ export async function exportCustomEmojis(job: Bull.Job, done: () => void): Promi
 	metaStream.end();
 
 	// Create archive
-	const [archivePath, archiveCleanup] = await new Promise<[string, () => void]>((res, rej) => {
-		tmp.file((e, path, fd, cleanup) => {
-			if (e) return rej(e);
-			res([path, cleanup]);
-		});
-	});
+	const [archivePath, archiveCleanup] = await createTemp();
 	const archiveStream = fs.createWriteStream(archivePath);
 	const archive = archiver('zip', {
 		zlib: { level: 0 },

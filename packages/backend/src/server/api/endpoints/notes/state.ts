@@ -1,5 +1,5 @@
-import define from '../../define';
-import { NoteFavorites, Notes, NoteThreadMutings, NoteWatchings } from '@/models/index';
+import define from '../../define.js';
+import { NoteFavorites, Notes, NoteThreadMutings, NoteWatchings } from '@/models/index.js';
 
 export const meta = {
 	tags: ['notes'],
@@ -36,7 +36,7 @@ export const paramDef = {
 
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, user) => {
-	const note = await Notes.findOneOrFail(ps.noteId);
+	const note = await Notes.findOneByOrFail({ id: ps.noteId });
 
 	const [favorite, watching, threadMuting] = await Promise.all([
 		NoteFavorites.count({

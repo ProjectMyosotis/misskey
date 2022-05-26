@@ -1,8 +1,8 @@
-import define from '../../define';
-import { ApiError } from '../../error';
-import { Channels, DriveFiles } from '@/models/index';
-import { Channel } from '@/models/entities/channel';
-import { genId } from '@/misc/gen-id';
+import define from '../../define.js';
+import { ApiError } from '../../error.js';
+import { Channels, DriveFiles } from '@/models/index.js';
+import { Channel } from '@/models/entities/channel.js';
+import { genId } from '@/misc/gen-id.js';
 
 export const meta = {
 	tags: ['channels'],
@@ -40,7 +40,7 @@ export const paramDef = {
 export default define(meta, paramDef, async (ps, user) => {
 	let banner = null;
 	if (ps.bannerId != null) {
-		banner = await DriveFiles.findOne({
+		banner = await DriveFiles.findOneBy({
 			id: ps.bannerId,
 			userId: user.id,
 		});
@@ -57,7 +57,7 @@ export default define(meta, paramDef, async (ps, user) => {
 		name: ps.name,
 		description: ps.description || null,
 		bannerId: banner ? banner.id : null,
-	} as Channel).then(x => Channels.findOneOrFail(x.identifiers[0]));
+	} as Channel).then(x => Channels.findOneByOrFail(x.identifiers[0]));
 
 	return await Channels.pack(channel, user);
 });

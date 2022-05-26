@@ -2,7 +2,7 @@ process.env.NODE_ENV = 'test';
 
 import * as assert from 'assert';
 import * as childProcess from 'child_process';
-import { async, signup, request, post, startServer, shutdownServer } from './utils';
+import { async, signup, request, post, startServer, shutdownServer } from './utils.js';
 
 describe('Block', () => {
 	let p: childProcess.ChildProcess;
@@ -25,7 +25,7 @@ describe('Block', () => {
 
 	it('Block作成', async(async () => {
 		const res = await request('/blocking/create', {
-			userId: bob.id
+			userId: bob.id,
 		}, alice);
 
 		assert.strictEqual(res.status, 200);

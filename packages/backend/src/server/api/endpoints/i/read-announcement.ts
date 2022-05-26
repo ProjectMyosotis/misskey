@@ -1,8 +1,8 @@
-import define from '../../define';
-import { ApiError } from '../../error';
-import { genId } from '@/misc/gen-id';
-import { AnnouncementReads, Announcements, Users } from '@/models/index';
-import { publishMainStream } from '@/services/stream';
+import define from '../../define.js';
+import { ApiError } from '../../error.js';
+import { genId } from '@/misc/gen-id.js';
+import { AnnouncementReads, Announcements, Users } from '@/models/index.js';
+import { publishMainStream } from '@/services/stream.js';
 
 export const meta = {
 	tags: ['account'],
@@ -31,14 +31,14 @@ export const paramDef = {
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, user) => {
 	// Check if announcement exists
-	const announcement = await Announcements.findOne(ps.announcementId);
+	const announcement = await Announcements.findOneBy({ id: ps.announcementId });
 
 	if (announcement == null) {
 		throw new ApiError(meta.errors.noSuchAnnouncement);
 	}
 
 	// Check if already read
-	const read = await AnnouncementReads.findOne({
+	const read = await AnnouncementReads.findOneBy({
 		announcementId: ps.announcementId,
 		userId: user.id,
 	});

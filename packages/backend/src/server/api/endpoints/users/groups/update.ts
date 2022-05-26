@@ -1,6 +1,6 @@
-import define from '../../../define';
-import { ApiError } from '../../../error';
-import { UserGroups } from '@/models/index';
+import define from '../../../define.js';
+import { ApiError } from '../../../error.js';
+import { UserGroups } from '@/models/index.js';
 
 export const meta = {
 	tags: ['groups'],
@@ -36,7 +36,7 @@ export const paramDef = {
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, me) => {
 	// Fetch the group
-	const userGroup = await UserGroups.findOne({
+	const userGroup = await UserGroups.findOneBy({
 		id: ps.groupId,
 		userId: me.id,
 	});

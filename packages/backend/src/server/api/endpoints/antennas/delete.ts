@@ -1,7 +1,7 @@
-import define from '../../define';
-import { ApiError } from '../../error';
-import { Antennas } from '@/models/index';
-import { publishInternalEvent } from '@/services/stream';
+import define from '../../define.js';
+import { ApiError } from '../../error.js';
+import { Antennas } from '@/models/index.js';
+import { publishInternalEvent } from '@/services/stream.js';
 
 export const meta = {
 	tags: ['antennas'],
@@ -29,7 +29,7 @@ export const paramDef = {
 
 // eslint-disable-next-line import/no-default-export
 export default define(meta, paramDef, async (ps, user) => {
-	const antenna = await Antennas.findOne({
+	const antenna = await Antennas.findOneBy({
 		id: ps.antennaId,
 		userId: user.id,
 	});
