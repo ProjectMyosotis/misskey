@@ -13,6 +13,7 @@ ARG VERSION_HASH
 COPY . ./
 RUN apk add --no-cache $BUILD_DEPS && \
 	git submodule update --init && \
+	node version-patch.js ${VERSION_HASH} && \
 	yarn install && \
 	yarn build && \
 	rm -rf .git
