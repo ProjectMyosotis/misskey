@@ -18,13 +18,12 @@ RUN apk add --no-cache $BUILD_DEPS && \
 	yarn build && \
 	rm -rf .git
 
-FROM base AS runner
+FROM node:16.15.1-bullseye-slim AS runner
 
-RUN apk add --no-cache \
-	ffmpeg \
-	tini
+WORKDIR /misskey
 
-ENTRYPOINT ["/sbin/tini", "--"]
+RUN apt-get update
+RUN apt-get install -y ffmpeg tini
 
 COPY --from=builder /misskey/node_modules ./node_modules
 COPY --from=builder /misskey/built ./built
@@ -34,5 +33,5 @@ COPY --from=builder /misskey/packages/client/node_modules ./packages/client/node
 COPY . ./
 
 ENV NODE_ENV=production
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["npm", "run", "migrateandstart"]
-

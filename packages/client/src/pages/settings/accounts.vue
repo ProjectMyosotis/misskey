@@ -21,13 +21,13 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, defineExpose, ref } from 'vue';
+import { defineAsyncComponent, ref } from 'vue';
 import FormSuspense from '@/components/form/suspense.vue';
-import FormButton from '@/components/ui/button.vue';
+import FormButton from '@/components/MkButton.vue';
 import * as os from '@/os';
-import * as symbols from '@/symbols';
-import { getAccounts, addAccount as addAccounts, login, $i } from '@/account';
+import { getAccounts, addAccount as addAccounts, removeAccount as _removeAccount, login, $i } from '@/account';
 import { i18n } from '@/i18n';
+import { definePageMetadata } from '@/scripts/page-metadata';
 
 const storedAccounts = ref<any>(null);
 const accounts = ref<any>(null);
@@ -39,13 +39,13 @@ const init = async () => {
 		console.log(storedAccounts.value);
 
 		return os.api('users/show', {
-			userIds: storedAccounts.value.map(x => x.id)
+			userIds: storedAccounts.value.map(x => x.id),
 		});
 	}).then(response => {
 		accounts.value = response;
 		console.log(accounts.value);
 	});
-}
+};
 
 function menu(account, ev) {
 	os.popupMenu([{
@@ -70,8 +70,12 @@ function addAccount(ev) {
 	}], ev.currentTarget ?? ev.target);
 }
 
+function removeAccount(account) {
+	_removeAccount(account.id);
+}
+
 function addExistingAccount() {
-	os.popup(defineAsyncComponent(() => import('@/components/signin-dialog.vue')), {}, {
+	os.popup(defineAsyncComponent(() => import('@/components/MkSigninDialog.vue')), {}, {
 		done: res => {
 			addAccounts(res.id, res.i);
 			os.success();
@@ -80,7 +84,7 @@ function addExistingAccount() {
 }
 
 function createAccount() {
-	os.popup(defineAsyncComponent(() => import('@/components/signup-dialog.vue')), {}, {
+	os.popup(defineAsyncComponent(() => import('@/components/MkSignupDialog.vue')), {}, {
 		done: res => {
 			addAccounts(res.id, res.i);
 			switchAccountWithToken(res.i);
@@ -98,12 +102,13 @@ function switchAccountWithToken(token: string) {
 	login(token);
 }
 
-defineExpose({
-	[symbols.PAGE_INFO]: {
-		title: i18n.ts.accounts,
-		icon: 'fas fa-users',
-		bg: 'var(--bg)',
-	}
+const headerActions = $computed(() => []);
+
+const headerTabs = $computed(() => []);
+
+definePageMetadata({
+	title: i18n.ts.accounts,
+	icon: 'fas fa-users',
 });
 </script>
 
