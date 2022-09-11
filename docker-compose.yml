@@ -5,7 +5,7 @@ services:
     image: projectmyosotis/misskey:hiyuki-develop
     restart: always
     links:
-      - db
+#      - db
       - redis
 #      - es
     ports:
