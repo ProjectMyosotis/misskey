@@ -1,22 +1,19 @@
-FROM node:18-alpine3.15 AS base
+FROM node:16.15.1-bullseye AS builder
 
 ARG NODE_ENV=production
+ARG VERSION_HASH
 
 WORKDIR /misskey
 
-ENV BUILD_DEPS autoconf automake file g++ gcc libc-dev libtool make nasm pkgconfig python3 zlib-dev git
-
-FROM base AS builder
-
-ARG VERSION_HASH
-
 COPY . ./
-RUN apk add --no-cache $BUILD_DEPS && \
-	git submodule update --init && \
-	node version-patch.js ${VERSION_HASH} && \
-	yarn install && \
-	yarn build && \
-	rm -rf .git
+
+RUN apt-get update
+RUN apt-get install -y build-essential
+RUN git submodule update --init
+RUN node version-patch.js ${VERSION_HASH}
+RUN yarn install
+RUN yarn build
+RUN rm -rf .git
 
 FROM node:16.15.1-bullseye-slim AS runner
 
