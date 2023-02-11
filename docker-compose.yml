@@ -9,8 +9,8 @@ services:
       - redis
 #      - es
     depends_on:
-      db:
-        condition: service_healthy
+#      db:
+#        condition: service_healthy
       redis:
         condition: service_healthy
     ports:
