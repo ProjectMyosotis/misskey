@@ -44,7 +44,7 @@ Thank you for your PR! Before creating a PR, please check the following:
 - Check if there are any documents that need to be created or updated due to this change.
 - If you have added a feature or fixed a bug, please add a test case if possible.
 - Please make sure that tests and Lint are passed in advance.
-  - You can run it with `npm run test` and `npm run lint`. [See more info](#testing)
+  - You can run it with `pnpm test` and `pnpm lint`. [See more info](#testing)
 - If this PR includes UI changes, please attach a screenshot in the text.
 
 Thanks for your cooperation 🤗
@@ -99,32 +99,40 @@ If your language is not listed in Crowdin, please open an issue.
 ![Crowdin](https://d322cqt584bo4o.cloudfront.net/misskey/localized.svg)
 
 ## Development
-During development, it is useful to use the `npm run dev` command.
-This command monitors the server-side and client-side source files and automatically builds them if they are modified.
-In addition, it will also automatically start the Misskey server process.
+During development, it is useful to use the 
+
+```
+pnpm dev
+```
+
+command.
+
+- Server-side source files and automatically builds them if they are modified. Automatically start the server process(es).
+- Vite HMR (just the `vite` command) is available. The behavior may be different from production.
+- Service Worker is watched by esbuild.
 
 ## Testing
-- Test codes are located in [`/test`](/test).
+- Test codes are located in [`/packages/backend/test`](/packages/backend/test).
 
 ### Run test
 Create a config file.
 ```
-cp test/test.yml .config/
+cp .github/misskey/test.yml .config/
 ```
 Prepare DB/Redis for testing.
 ```
-docker-compose -f test/docker-compose.yml up
+docker compose -f packages/backend/test/docker-compose.yml up
 ```
 Alternatively, prepare an empty (data can be erased) DB and edit `.config/test.yml`. 
 
 Run all test.
 ```
-npm run test
+pnpm test
 ```
 
 #### Run specify test
 ```
-npx cross-env TS_NODE_FILES=true TS_NODE_TRANSPILE_ONLY=true TS_NODE_PROJECT="./test/tsconfig.json" npx mocha test/foo.ts --require ts-node/register
+pnpm jest -- foo.ts
 ```
 
 ### e2e tests
@@ -169,9 +177,9 @@ vue-routerとの最大の違いは、niraxは複数のルーターが存在す�
 これにより、アプリ内ウィンドウでブラウザとは個別にルーティングすることなどが可能になります。
 
 ## Notes
-### How to resolve conflictions occurred at yarn.lock?
+### How to resolve conflictions occurred at pnpm-lock.yaml?
 
-Just execute `yarn` to fix it.
+Just execute `pnpm` to fix it.
 
 ### INSERTするときにはsaveではなくinsertを使用する
 #6441
@@ -257,7 +265,7 @@ MongoDBは`null`で返してきてたので、その感覚で`if (x === null)`�
 ### Migration作成方法
 packages/backendで:
 ```sh
-npx typeorm migration:generate -d ormconfig.js -o <migration name>
+pnpm dlx typeorm migration:generate -d ormconfig.js -o <migration name>
 ```
 
 - 生成後、ファイルをmigration下に移してください
