@@ -55,6 +55,12 @@ export const apiWithDialog = ((
 		} else if (err.code === 'RATE_LIMIT_EXCEEDED') {
 			title = i18n.ts.cannotPerformTemporary;
 			text = i18n.ts.cannotPerformTemporaryDescription;
+		} else if (err.code === 'INVALID_PARAM') {
+			title = i18n.ts.invalidParamError;
+			text = i18n.ts.invalidParamErrorDescription;
+		} else if (err.code === 'ROLE_PERMISSION_DENIED') {
+			title = i18n.ts.permissionDeniedError;
+			text = i18n.ts.permissionDeniedErrorDescription;
 		} else if (err.code.startsWith('TOO_MANY')) {
 			title = i18n.ts.youCannotCreateAnymore;
 			text = `${i18n.ts.error}: ${err.id}`;
@@ -215,6 +221,7 @@ export function actions<T extends {
 	value: string;
 	text: string;
 	primary?: boolean,
+	danger?: boolean,
 }[]>(props: {
 	type: 'error' | 'info' | 'success' | 'warning' | 'waiting' | 'question';
 	title?: string | null;
@@ -229,6 +236,7 @@ export function actions<T extends {
 			actions: props.actions.map(a => ({
 				text: a.text,
 				primary: a.primary,
+				danger: a.danger,
 				callback: () => {
 					resolve({ canceled: false, result: a.value });
 				},

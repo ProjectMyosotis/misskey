@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import promiseLimit from 'promise-limit';
+import { In } from 'typeorm';
 import { DI } from '@/di-symbols.js';
 import type { PollsRepository, EmojisRepository } from '@/models/index.js';
 import type { Config } from '@/config.js';
@@ -70,7 +71,7 @@ export class ApNoteService {
 	}
 
 	@bindThis
-	public validateNote(object: any, uri: string) {
+	public validateNote(object: IObject, uri: string) {
 		const expectHost = this.utilityService.extractDbHost(uri);
 	
 		if (object == null) {
@@ -84,9 +85,10 @@ export class ApNoteService {
 		if (object.id && this.utilityService.extractDbHost(object.id) !== expectHost) {
 			return new Error(`invalid Note: id has different host. expected: ${expectHost}, actual: ${this.utilityService.extractDbHost(object.id)}`);
 		}
-	
-		if (object.attributedTo && this.utilityService.extractDbHost(getOneApId(object.attributedTo)) !== expectHost) {
-			return new Error(`invalid Note: attributedTo has different host. expected: ${expectHost}, actual: ${this.utilityService.extractDbHost(object.attributedTo)}`);
+
+		const actualHost = object.attributedTo && this.utilityService.extractDbHost(getOneApId(object.attributedTo));
+		if (object.attributedTo && actualHost !== expectHost) {
+			return new Error(`invalid Note: attributedTo has different host. expected: ${expectHost}, actual: ${actualHost}`);
 		}
 	
 		return null;
@@ -124,7 +126,7 @@ export class ApNoteService {
 			throw new Error('invalid note');
 		}
 	
-		const note: IPost = object as any;
+		const note = object as IPost;
 	
 		this.logger.debug(`Note fetched: ${JSON.stringify(note, null, 2)}`);
 
@@ -180,7 +182,7 @@ export class ApNoteService {
 		const reply: Note | null = note.inReplyTo
 			? await this.resolveNote(note.inReplyTo, resolver).then(x => {
 				if (x == null) {
-					this.logger.warn('Specified inReplyTo, but nout found');
+					this.logger.warn('Specified inReplyTo, but not found');
 					throw new Error('inReplyTo not found');
 				} else {
 					return x;
@@ -341,15 +343,17 @@ export class ApNoteService {
 		if (!tags) return [];
 	
 		const eomjiTags = toArray(tags).filter(isEmoji);
+
+		const existingEmojis = await this.emojisRepository.findBy({
+			host,
+			name: In(eomjiTags.map(tag => tag.name!.replaceAll(':', ''))),
+		});
 	
 		return await Promise.all(eomjiTags.map(async tag => {
-			const name = tag.name!.replace(/^:/, '').replace(/:$/, '');
+			const name = tag.name!.replaceAll(':', '');
 			tag.icon = toSingle(tag.icon);
 	
-			const exists = await this.emojisRepository.findOneBy({
-				host,
-				name,
-			});
+			const exists = existingEmojis.find(x => x.name === name);
 	
 			if (exists) {
 				if ((tag.updated != null && exists.updatedAt == null)

@@ -13,11 +13,6 @@
 						<template #label>{{ i18n.ts.instanceDescription }}</template>
 					</MkTextarea>
 
-					<MkInput v-model="tosUrl">
-						<template #prefix><i class="ti ti-link"></i></template>
-						<template #label>{{ i18n.ts.tosUrl }}</template>
-					</MkInput>
-
 					<FormSplit :min-width="300">
 						<MkInput v-model="maintainerName">
 							<template #label>{{ i18n.ts.maintainerName }}</template>
@@ -42,6 +37,14 @@
 
 							<MkSwitch v-model="emailRequiredForSignup">
 								<template #label>{{ i18n.ts.emailRequiredForSignup }}</template>
+							</MkSwitch>
+
+							<MkSwitch v-model="enableChartsForRemoteUser">
+								<template #label>{{ i18n.ts.enableChartsForRemoteUser }}</template>
+							</MkSwitch>
+
+							<MkSwitch v-model="enableChartsForFederatedInstances">
+								<template #label>{{ i18n.ts.enableChartsForFederatedInstances }}</template>
 							</MkSwitch>
 						</div>
 					</FormSection>
@@ -161,7 +164,6 @@ import MkButton from '@/components/MkButton.vue';
 
 let name: string | null = $ref(null);
 let description: string | null = $ref(null);
-let tosUrl: string | null = $ref(null);
 let maintainerName: string | null = $ref(null);
 let maintainerEmail: string | null = $ref(null);
 let iconUrl: string | null = $ref(null);
@@ -175,6 +177,8 @@ let cacheRemoteFiles: boolean = $ref(false);
 let enableRegistration: boolean = $ref(false);
 let emailRequiredForSignup: boolean = $ref(false);
 let enableServiceWorker: boolean = $ref(false);
+let enableChartsForRemoteUser: boolean = $ref(false);
+let enableChartsForFederatedInstances: boolean = $ref(false);
 let swPublicKey: any = $ref(null);
 let swPrivateKey: any = $ref(null);
 let deeplAuthKey: string = $ref('');
@@ -184,7 +188,6 @@ async function init() {
 	const meta = await os.api('admin/meta');
 	name = meta.name;
 	description = meta.description;
-	tosUrl = meta.tosUrl;
 	iconUrl = meta.iconUrl;
 	bannerUrl = meta.bannerUrl;
 	backgroundImageUrl = meta.backgroundImageUrl;
@@ -198,6 +201,8 @@ async function init() {
 	enableRegistration = !meta.disableRegistration;
 	emailRequiredForSignup = meta.emailRequiredForSignup;
 	enableServiceWorker = meta.enableServiceWorker;
+	enableChartsForRemoteUser = meta.enableChartsForRemoteUser;
+	enableChartsForFederatedInstances = meta.enableChartsForFederatedInstances;
 	swPublicKey = meta.swPublickey;
 	swPrivateKey = meta.swPrivateKey;
 	deeplAuthKey = meta.deeplAuthKey;
@@ -208,7 +213,6 @@ function save() {
 	os.apiWithDialog('admin/update-meta', {
 		name,
 		description,
-		tosUrl,
 		iconUrl,
 		bannerUrl,
 		backgroundImageUrl,
@@ -222,6 +226,8 @@ function save() {
 		disableRegistration: !enableRegistration,
 		emailRequiredForSignup,
 		enableServiceWorker,
+		enableChartsForRemoteUser,
+		enableChartsForFederatedInstances,
 		swPublicKey,
 		swPrivateKey,
 		deeplAuthKey,

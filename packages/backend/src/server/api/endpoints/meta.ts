@@ -276,7 +276,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 				uri: this.config.url,
 				description: instance.description,
 				langs: instance.langs,
-				tosUrl: instance.ToSUrl,
+				tosUrl: instance.termsOfServiceUrl,
 				repositoryUrl: instance.repositoryUrl,
 				feedbackUrl: instance.feedbackUrl,
 				disableRegistration: instance.disableRegistration,
@@ -310,13 +310,13 @@ export default class extends Endpoint<typeof meta, typeof paramDef> {
 
 				translatorAvailable: instance.deeplAuthKey != null,
 
+				serverRules: instance.serverRules,
+
 				policies: { ...DEFAULT_POLICIES, ...instance.policies },
 
 				mediaProxy: this.config.mediaProxy,
 
 				...(ps.detail ? {
-					pinnedPages: instance.pinnedPages,
-					pinnedClipId: instance.pinnedClipId,
 					cacheRemoteFiles: instance.cacheRemoteFiles,
 					requireSetup: (await this.usersRepository.countBy({
 						host: IsNull(),
