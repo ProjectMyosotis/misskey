@@ -18,6 +18,8 @@ import MkPopupMenu from '@/components/MkPopupMenu.vue';
 import MkContextMenu from '@/components/MkContextMenu.vue';
 import { MenuItem } from '@/types/menu';
 import copyToClipboard from './scripts/copy-to-clipboard';
+import { showMovedDialog } from './scripts/show-moved-dialog';
+import { DriveFile } from 'misskey-js/built/entities';
 
 export const openingWindowsCount = ref(0);
 
@@ -166,12 +168,6 @@ export async function popup(component: Component, props: Record<string, any>, ev
 
 export function pageWindow(path: string) {
 	popup(MkPageWindow, {
-		initialPath: path,
-	}, {}, 'closed');
-}
-
-export function modalPageWindow(path: string) {
-	popup(defineAsyncComponent(() => import('@/components/MkModalPageWindow.vue')), {
 		initialPath: path,
 	}, {}, 'closed');
 }
@@ -419,7 +415,7 @@ export async function selectUser(opts: { includeSelf?: boolean } = {}) {
 	});
 }
 
-export async function selectDriveFile(multiple: boolean) {
+export async function selectDriveFile(multiple: boolean): Promise<DriveFile[]> {
 	return new Promise((resolve, reject) => {
 		popup(defineAsyncComponent(() => import('@/components/MkDriveSelectDialog.vue')), {
 			type: 'file',
@@ -427,7 +423,7 @@ export async function selectDriveFile(multiple: boolean) {
 		}, {
 			done: files => {
 				if (files) {
-					resolve(multiple ? files : files[0]);
+					resolve(files);
 				}
 			},
 		}, 'closed');
@@ -578,6 +574,8 @@ export function contextMenu(items: MenuItem[] | Ref<MenuItem[]>, ev: MouseEvent)
 }
 
 export function post(props: Record<string, any> = {}): Promise<void> {
+	showMovedDialog();
+
 	return new Promise((resolve, reject) => {
 		// NOTE: MkPostFormDialogをdynamic importするとiOSでテキストエリアに自動フォーカスできない
 		// NOTE: ただ、dynamic importしない場合、MkPostFormDialogインスタンスが使いまわされ、

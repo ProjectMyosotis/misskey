@@ -960,8 +960,14 @@ export type Endpoints = {
         res: TODO;
     };
     'drive/files/create': {
-        req: TODO;
-        res: TODO;
+        req: {
+            folderId?: string;
+            name?: string;
+            comment?: string;
+            isSentisive?: boolean;
+            force?: boolean;
+        };
+        res: DriveFile;
     };
     'drive/files/delete': {
         req: {
@@ -1357,10 +1363,6 @@ export type Endpoints = {
         req: TODO;
         res: TODO;
     };
-    'i/known-as': {
-        req: TODO;
-        res: TODO;
-    };
     'i/notifications': {
         req: {
             limit?: number;
@@ -1511,6 +1513,7 @@ export type Endpoints = {
             mutedWords?: string[][];
             mutingNotificationTypes?: Notification_2['type'][];
             emailNotificationTypes?: string[];
+            alsoKnownAs?: string[];
         };
         res: MeDetailed;
     };
@@ -1945,6 +1948,19 @@ export type Endpoints = {
         req: TODO;
         res: TODO;
     };
+    'signup': {
+        req: {
+            username: string;
+            password: string;
+            host?: string;
+            invitationCode?: string;
+            emailAddress?: string;
+            'hcaptcha-response'?: string;
+            'g-recaptcha-response'?: string;
+            'turnstile-response'?: string;
+        };
+        res: MeSignup | null;
+    };
     'stats': {
         req: NoParams;
         res: Stats;
@@ -2150,10 +2166,6 @@ export type Endpoints = {
             };
         };
     };
-    'users/stats': {
-        req: TODO;
-        res: TODO;
-    };
 };
 
 declare namespace entities {
@@ -2166,6 +2178,8 @@ declare namespace entities {
         UserGroup,
         UserList,
         MeDetailed,
+        MeDetailedWithSecret,
+        MeSignup,
         DriveFile,
         DriveFolder,
         GalleryPost,
@@ -2327,7 +2341,9 @@ type LiteInstanceMetadata = {
     themeColor: string | null;
     mascotImageUrl: string | null;
     bannerUrl: string | null;
-    errorImageUrl: string | null;
+    serverErrorImageUrl: string | null;
+    infoImageUrl: string | null;
+    notFoundImageUrl: string | null;
     iconUrl: string | null;
     backgroundImageUrl: string | null;
     logoImageUrl: string | null;
@@ -2377,6 +2393,22 @@ type MeDetailed = UserDetailed & {
     receiveAnnouncementEmail: boolean;
     usePasswordLessLogin: boolean;
     [other: string]: any;
+};
+
+// @public (undocumented)
+type MeDetailedWithSecret = MeDetailed & {
+    email: string;
+    emailVerified: boolean;
+    securityKeysList: {
+        id: string;
+        name: string;
+        lastUsed: string;
+    }[];
+};
+
+// @public (undocumented)
+type MeSignup = MeDetailedWithSecret & {
+    token: string;
 };
 
 // @public (undocumented)
@@ -2609,6 +2641,10 @@ export class Stream extends EventEmitter<StreamEvents> {
     //
     // (undocumented)
     disconnectToChannel(connection: NonSharedConnection): void;
+    // (undocumented)
+    heartbeat(): void;
+    // (undocumented)
+    ping(): void;
     // Warning: (ae-forgotten-export) The symbol "SharedConnection" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2634,6 +2670,7 @@ type User = UserLite | UserDetailed;
 
 // @public (undocumented)
 type UserDetailed = UserLite & {
+    alsoKnownAs: string[];
     bannerBlurhash: string | null;
     bannerColor: string | null;
     bannerUrl: string | null;
@@ -2664,6 +2701,7 @@ type UserDetailed = UserLite & {
     lang: string | null;
     lastFetchedAt?: DateString;
     location: string | null;
+    movedTo: string;
     notesCount: number;
     pinnedNoteIds: ID[];
     pinnedNotes: Note[];
@@ -2697,8 +2735,6 @@ type UserLite = {
     onlineStatus: 'online' | 'active' | 'offline' | 'unknown';
     avatarUrl: string;
     avatarBlurhash: string;
-    alsoKnownAs: string[];
-    movedToUri: any;
     emojis: {
         name: string;
         url: string;
@@ -2720,7 +2756,7 @@ type UserSorting = '+follower' | '-follower' | '+createdAt' | '-createdAt' | '+u
 //
 // src/api.types.ts:16:32 - (ae-forgotten-export) The symbol "TODO" needs to be exported by the entry point index.d.ts
 // src/api.types.ts:18:25 - (ae-forgotten-export) The symbol "NoParams" needs to be exported by the entry point index.d.ts
-// src/api.types.ts:596:18 - (ae-forgotten-export) The symbol "ShowUserReq" needs to be exported by the entry point index.d.ts
+// src/api.types.ts:620:18 - (ae-forgotten-export) The symbol "ShowUserReq" needs to be exported by the entry point index.d.ts
 // src/streaming.types.ts:33:4 - (ae-forgotten-export) The symbol "FIXME" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

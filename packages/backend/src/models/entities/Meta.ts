@@ -101,13 +101,25 @@ export class Meta {
 		length: 1024,
 		nullable: true,
 	})
-	public errorImageUrl: string | null;
+	public iconUrl: string | null;
 
 	@Column('varchar', {
 		length: 1024,
 		nullable: true,
 	})
-	public iconUrl: string | null;
+	public serverErrorImageUrl: string | null;
+
+	@Column('varchar', {
+		length: 1024,
+		nullable: true,
+	})
+	public notFoundImageUrl: string | null;
+
+	@Column('varchar', {
+		length: 1024,
+		nullable: true,
+	})
+	public infoImageUrl: string | null;
 
 	@Column('boolean', {
 		default: true,
@@ -412,4 +424,9 @@ export class Meta {
 		default: '{}',
 	})
 	public serverRules: string[];
+
+	@Column('varchar', {
+		length: 1024, array: true, default: '{ "admin", "administrator", "root", "system", "maintainer", "host", "mod", "moderator", "owner", "superuser", "staff", "auth", "i", "me", "everyone", "all", "mention", "mentions", "example", "user", "users", "account", "accounts", "official", "help", "helps", "support", "supports", "info", "information", "informations", "announce", "announces", "announcement", "announcements", "notice", "notification", "notifications", "dev", "developer", "developers", "tech", "misskey" }',
+	})
+	public preservedUsernames: string[];
 }

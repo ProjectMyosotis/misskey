@@ -2,7 +2,7 @@ import type {
 	Ad, Announcement, Antenna, App, AuthSession, Blocking, Channel, Clip, DateString, DetailedInstanceMetadata, DriveFile, DriveFolder, Following, FollowingFolloweePopulated, FollowingFollowerPopulated, FollowRequest, GalleryPost, Instance,
 	LiteInstanceMetadata,
 	MeDetailed,
-	Note, NoteFavorite, OriginType, Page, ServerInfo, Stats, User, UserDetailed, UserGroup, UserList, UserSorting, Notification, NoteReaction, Signin, MessagingMessage,
+	Note, NoteFavorite, OriginType, Page, ServerInfo, Stats, User, UserDetailed, MeSignup, UserGroup, UserList, UserSorting, Notification, NoteReaction, Signin, MessagingMessage,
 } from './entities.js';
 
 type TODO = Record<string, any> | null;
@@ -262,7 +262,16 @@ export type Endpoints = {
 	'drive/files': { req: { folderId?: DriveFolder['id'] | null; type?: DriveFile['type'] | null; limit?: number; sinceId?: DriveFile['id']; untilId?: DriveFile['id']; }; res: DriveFile[]; };
 	'drive/files/attached-notes': { req: TODO; res: TODO; };
 	'drive/files/check-existence': { req: TODO; res: TODO; };
-	'drive/files/create': { req: TODO; res: TODO; };
+	'drive/files/create': {
+		req: {
+			folderId?: string,
+			name?: string,
+			comment?: string,
+			isSentisive?: boolean,
+			force?: boolean,
+		};
+		res: DriveFile;
+	};
 	'drive/files/delete': { req: { fileId: DriveFile['id']; }; res: null; };
 	'drive/files/find-by-hash': { req: TODO; res: TODO; };
 	'drive/files/find': { req: { name: string; folderId?: DriveFolder['id'] | null; }; res: DriveFile[]; };
@@ -363,7 +372,6 @@ export type Endpoints = {
 	'i/import-following': { req: TODO; res: TODO; };
 	'i/import-user-lists': { req: TODO; res: TODO; };
 	'i/move': { req: TODO; res: TODO; };
-	'i/known-as': { req: TODO; res: TODO; };
 	'i/notifications': { req: {
 		limit?: number;
 		sinceId?: Notification['id'];
@@ -421,6 +429,7 @@ export type Endpoints = {
 		mutedWords?: string[][];
 		mutingNotificationTypes?: Notification['type'][];
 		emailNotificationTypes?: string[];
+		alsoKnownAs?: string[];
 	}; res: MeDetailed; };
 	'i/user-group-invites': { req: TODO; res: TODO; };
 	'i/2fa/done': { req: TODO; res: TODO; };
@@ -549,6 +558,21 @@ export type Endpoints = {
 	'room/show': { req: TODO; res: TODO; };
 	'room/update': { req: TODO; res: TODO; };
 
+	// signup
+	'signup': {
+		req: {
+			username: string;
+			password: string;
+			host?: string;
+			invitationCode?: string;
+			emailAddress?: string;
+			'hcaptcha-response'?: string;
+			'g-recaptcha-response'?: string;
+			'turnstile-response'?: string;
+		};
+		res: MeSignup | null;
+	};
+
 	// stats
 	'stats': { req: NoParams; res: Stats; };
 
@@ -602,5 +626,4 @@ export type Endpoints = {
 			$default: UserDetailed;
 		};
 	}; };
-	'users/stats': { req: TODO; res: TODO; };
 };
