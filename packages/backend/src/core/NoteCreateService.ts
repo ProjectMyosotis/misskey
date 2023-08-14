@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 import { setImmediate } from 'node:timers/promises';
 import * as mfm from 'mfm-js';
 import { In, DataSource } from 'typeorm';
@@ -9,7 +14,7 @@ import { extractCustomEmojisFromMfm } from '@/misc/extract-custom-emojis-from-mf
 import { extractHashtags } from '@/misc/extract-hashtags.js';
 import type { IMentionedRemoteUsers } from '@/models/entities/Note.js';
 import { Note } from '@/models/entities/Note.js';
-import type { ChannelFollowingsRepository, ChannelsRepository, InstancesRepository, MutedNotesRepository, MutingsRepository, NotesRepository, NoteThreadMutingsRepository, UserProfilesRepository, UsersRepository } from '@/models/index.js';
+import type { ChannelsRepository, InstancesRepository, MutedNotesRepository, MutingsRepository, NotesRepository, NoteThreadMutingsRepository, UserProfilesRepository, UsersRepository } from '@/models/index.js';
 import type { DriveFile } from '@/models/entities/DriveFile.js';
 import type { App } from '@/models/entities/App.js';
 import { concat } from '@/misc/prelude/array.js';
@@ -176,9 +181,6 @@ export class NoteCreateService implements OnApplicationShutdown {
 
 		@Inject(DI.channelsRepository)
 		private channelsRepository: ChannelsRepository,
-
-		@Inject(DI.channelFollowingsRepository)
-		private channelFollowingsRepository: ChannelFollowingsRepository,
 
 		@Inject(DI.noteThreadMutingsRepository)
 		private noteThreadMutingsRepository: NoteThreadMutingsRepository,
@@ -362,7 +364,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			name: data.name,
 			text: data.text,
 			hasPoll: data.poll != null,
-			cw: data.cw == null ? null : data.cw,
+			cw: data.cw ?? null,
 			tags: tags.map(tag => normalizeForSearch(tag)),
 			emojis,
 			userId: user.id,
@@ -397,7 +399,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 				const url = profile != null ? profile.url : null;
 				return {
 					uri: u.uri,
-					url: url == null ? undefined : url,
+					url: url ?? undefined,
 					username: u.username,
 					host: u.host,
 				} as IMentionedRemoteUsers[0];
@@ -570,12 +572,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 			if (data.reply) {
 				// 通知
 				if (data.reply.userHost === null) {
-					const threadMuted = await this.noteThreadMutingsRepository.findOneBy({
-						userId: data.reply.userId,
-						threadId: data.reply.threadId ?? data.reply.id,
+					const isThreadMuted = await this.noteThreadMutingsRepository.exist({
+						where: {
+							userId: data.reply.userId,
+							threadId: data.reply.threadId ?? data.reply.id,
+						},
 					});
 
-					if (!threadMuted) {
+					if (!isThreadMuted) {
 						nm.push(data.reply.userId, 'reply');
 						this.globalEventService.publishMainStream(data.reply.userId, 'reply', noteObj);
 
@@ -712,12 +716,14 @@ export class NoteCreateService implements OnApplicationShutdown {
 	@bindThis
 	private async createMentionedEvents(mentionedUsers: MinimumUser[], note: Note, nm: NotificationManager) {
 		for (const u of mentionedUsers.filter(u => this.userEntityService.isLocalUser(u))) {
-			const threadMuted = await this.noteThreadMutingsRepository.findOneBy({
-				userId: u.id,
-				threadId: note.threadId ?? note.id,
+			const isThreadMuted = await this.noteThreadMutingsRepository.exist({
+				where: {
+					userId: u.id,
+					threadId: note.threadId ?? note.id,
+				},
 			});
 
-			if (threadMuted) {
+			if (isThreadMuted) {
 				continue;
 			}
 

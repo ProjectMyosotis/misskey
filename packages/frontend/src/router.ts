@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 import { AsyncComponentLoader, defineAsyncComponent, inject } from 'vue';
 import { Router } from '@/nirax';
 import { $i, iAmModerator } from '@/account';
@@ -37,10 +42,6 @@ export const routes = [{
 }, {
 	path: '/clips/:clipId',
 	component: page(() => import('./pages/clip.vue')),
-}, {
-	path: '/user-info/:userId',
-	component: page(() => import('./pages/user-info.vue')),
-	hash: 'initialTab',
 }, {
 	path: '/instance-info/:host',
 	component: page(() => import('./pages/instance-info.vue')),
@@ -202,6 +203,10 @@ export const routes = [{
 	path: '/about-misskey',
 	component: page(() => import('./pages/about-misskey.vue')),
 }, {
+	path: '/invite',
+	name: 'invite',
+	component: page(() => import('./pages/invite.vue')),
+}, {
 	path: '/ads',
 	component: page(() => import('./pages/ads.vue')),
 }, {
@@ -254,6 +259,9 @@ export const routes = [{
 		icon: 'icon',
 		permission: 'permission',
 	},
+}, {
+	path: '/oauth/authorize',
+	component: page(() => import('./pages/oauth.vue')),
 }, {
 	path: '/tags/:tag',
 	component: page(() => import('./pages/tag.vue')),
@@ -322,6 +330,9 @@ export const routes = [{
 }, {
 	path: '/registry',
 	component: page(() => import('./pages/registry.vue')),
+}, {
+	path: '/admin/user/:userId',
+	component: iAmModerator ? page(() => import('./pages/admin-user.vue')) : page(() => import('./pages/not-found.vue')),
 }, {
 	path: '/admin/file/:fileId',
 	component: iAmModerator ? page(() => import('./pages/admin-file.vue')) : page(() => import('./pages/not-found.vue')),
@@ -428,6 +439,10 @@ export const routes = [{
 		path: '/server-rules',
 		name: 'server-rules',
 		component: page(() => import('./pages/admin/server-rules.vue')),
+	}, {
+		path: '/invites',
+		name: 'invites',
+		component: page(() => import('./pages/admin/invites.vue')),
 	}, {
 		path: '/',
 		component: page(() => import('./pages/_empty_.vue')),

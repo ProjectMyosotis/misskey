@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-License-Identifier: AGPL-3.0-only
+ */
+
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import promiseLimit from 'promise-limit';
 import { In } from 'typeorm';
@@ -126,13 +131,13 @@ export class ApNoteService {
 		this.logger.debug(`Note fetched: ${JSON.stringify(note, null, 2)}`);
 
 		if (note.id && !checkHttps(note.id)) {
-			throw new Error('unexpected shcema of note.id: ' + note.id);
+			throw new Error('unexpected schema of note.id: ' + note.id);
 		}
 
 		const url = getOneApHrefNullable(note.url);
 
 		if (url && !checkHttps(url)) {
-			throw new Error('unexpected shcema of note url: ' + url);
+			throw new Error('unexpected schema of note url: ' + url);
 		}
 
 		this.logger.info(`Creating the Note: ${note.id}`);
@@ -195,12 +200,12 @@ export class ApNoteService {
 		// 引用
 		let quote: Note | undefined | null = null;
 
-		if (note._misskey_quote || note.quoteUrl) {
+		if (note._misskey_quote ?? note.quoteUrl) {
 			const tryResolveNote = async (uri: string): Promise<
 				| { status: 'ok'; res: Note }
 				| { status: 'permerror' | 'temperror' }
 			> => {
-				if (!uri.match(/^https?:/)) return { status: 'permerror' };
+				if (!/^https?:/.test(uri)) return { status: 'permerror' };
 				try {
 					const res = await this.resolveNote(uri);
 					if (res == null) return { status: 'permerror' };
@@ -266,24 +271,36 @@ export class ApNoteService {
 
 		const poll = await this.apQuestionService.extractPollFromQuestion(note, resolver).catch(() => undefined);
 
-		return await this.noteCreateService.create(actor, {
-			createdAt: note.published ? new Date(note.published) : null,
-			files,
-			reply,
-			renote: quote,
-			name: note.name,
-			cw,
-			text,
-			localOnly: false,
-			visibility,
-			visibleUsers,
-			apMentions,
-			apHashtags,
-			apEmojis,
-			poll,
-			uri: note.id,
-			url: url,
-		}, silent);
+		try {
+			return await this.noteCreateService.create(actor, {
+				createdAt: note.published ? new Date(note.published) : null,
+				files,
+				reply,
+				renote: quote,
+				name: note.name,
+				cw,
+				text,
+				localOnly: false,
+				visibility,
+				visibleUsers,
+				apMentions,
+				apHashtags,
+				apEmojis,
+				poll,
+				uri: note.id,
+				url: url,
+			}, silent);
+		} catch (err: any) {
+			if (err.name !== 'duplicated') {
+				throw err;
+			}
+			this.logger.info('The note is already inserted while creating itself, reading again');
+			const duplicate = await this.fetchNote(value);
+			if (!duplicate) {
+				throw new Error('The note creation failed with duplication error even when there is no duplication');
+			}
+			return duplicate;
+		}
 	}
 
 	/**
