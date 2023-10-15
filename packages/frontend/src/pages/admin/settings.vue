@@ -14,6 +14,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<template #label>{{ i18n.ts.instanceName }}</template>
 					</MkInput>
 
+					<MkInput v-model="shortName">
+						<template #label>{{ i18n.ts._serverSettings.shortName }} ({{ i18n.ts.optional }})</template>
+						<template #caption>{{ i18n.ts._serverSettings.shortNameDescription }}</template>
+					</MkInput>
+
 					<MkTextarea v-model="description">
 						<template #label>{{ i18n.ts.instanceDescription }}</template>
 					</MkTextarea>
@@ -28,6 +33,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<template #label>{{ i18n.ts.maintainerEmail }}</template>
 						</MkInput>
 					</FormSplit>
+
+					<MkInput v-model="impressumUrl">
+						<template #label>{{ i18n.ts.impressumUrl }}</template>
+						<template #prefix><i class="ti ti-link"></i></template>
+						<template #caption>{{ i18n.ts.impressumDescription }}</template>
+					</MkInput>
 
 					<MkTextarea v-model="pinnedUsers">
 						<template #label>{{ i18n.ts.pinnedUsers }}</template>
@@ -76,16 +87,40 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</FormSection>
 
 					<FormSection>
-						<template #label>DeepL Translation</template>
+						<template #label>Timeline caching</template>
 
 						<div class="_gaps_m">
-							<MkInput v-model="deeplAuthKey">
-								<template #prefix><i class="ti ti-key"></i></template>
-								<template #label>DeepL Auth Key</template>
+							<MkInput v-model="perLocalUserUserTimelineCacheMax" type="number">
+								<template #label>perLocalUserUserTimelineCacheMax</template>
 							</MkInput>
-							<MkSwitch v-model="deeplIsPro">
-								<template #label>Pro account</template>
-							</MkSwitch>
+
+							<MkInput v-model="perRemoteUserUserTimelineCacheMax" type="number">
+								<template #label>perRemoteUserUserTimelineCacheMax</template>
+							</MkInput>
+
+							<MkInput v-model="perUserHomeTimelineCacheMax" type="number">
+								<template #label>perUserHomeTimelineCacheMax</template>
+							</MkInput>
+
+							<MkInput v-model="perUserListTimelineCacheMax" type="number">
+								<template #label>perUserListTimelineCacheMax</template>
+							</MkInput>
+						</div>
+					</FormSection>
+
+					<FormSection>
+						<template #label>{{ i18n.ts._ad.adsSettings }}</template>
+
+						<div class="_gaps_m">
+							<div class="_gaps_s">
+								<MkInput v-model="notesPerOneAd" :min="0" type="number">
+									<template #label>{{ i18n.ts._ad.notesPerOneAd }}</template>
+									<template #caption>{{ i18n.ts._ad.setZeroToDisable }}</template>
+								</MkInput>
+								<MkInfo v-if="notesPerOneAd > 0 && notesPerOneAd < 20" :warn="true">
+									{{ i18n.ts._ad.adsTooClose }}
+								</MkInfo>
+							</div>
 						</div>
 					</FormSection>
 				</div>
@@ -108,61 +143,77 @@ import XHeader from './_header_.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
+import MkInfo from '@/components/MkInfo.vue';
 import FormSection from '@/components/form/section.vue';
 import FormSplit from '@/components/form/split.vue';
 import FormSuspense from '@/components/form/suspense.vue';
-import * as os from '@/os';
-import { fetchInstance } from '@/instance';
-import { i18n } from '@/i18n';
-import { definePageMetadata } from '@/scripts/page-metadata';
+import * as os from '@/os.js';
+import { fetchInstance } from '@/instance.js';
+import { i18n } from '@/i18n.js';
+import { definePageMetadata } from '@/scripts/page-metadata.js';
 import MkButton from '@/components/MkButton.vue';
 
 let name: string | null = $ref(null);
+let shortName: string | null = $ref(null);
 let description: string | null = $ref(null);
 let maintainerName: string | null = $ref(null);
 let maintainerEmail: string | null = $ref(null);
+let impressumUrl: string | null = $ref(null);
 let pinnedUsers: string = $ref('');
 let cacheRemoteFiles: boolean = $ref(false);
 let cacheRemoteSensitiveFiles: boolean = $ref(false);
 let enableServiceWorker: boolean = $ref(false);
 let swPublicKey: any = $ref(null);
 let swPrivateKey: any = $ref(null);
-let deeplAuthKey: string = $ref('');
-let deeplIsPro: boolean = $ref(false);
+let perLocalUserUserTimelineCacheMax: number = $ref(0);
+let perRemoteUserUserTimelineCacheMax: number = $ref(0);
+let perUserHomeTimelineCacheMax: number = $ref(0);
+let perUserListTimelineCacheMax: number = $ref(0);
+let notesPerOneAd: number = $ref(0);
 
 async function init(): Promise<void> {
 	const meta = await os.api('admin/meta');
 	name = meta.name;
+	shortName = meta.shortName;
 	description = meta.description;
 	maintainerName = meta.maintainerName;
 	maintainerEmail = meta.maintainerEmail;
+	impressumUrl = meta.impressumUrl;
 	pinnedUsers = meta.pinnedUsers.join('\n');
 	cacheRemoteFiles = meta.cacheRemoteFiles;
 	cacheRemoteSensitiveFiles = meta.cacheRemoteSensitiveFiles;
 	enableServiceWorker = meta.enableServiceWorker;
 	swPublicKey = meta.swPublickey;
 	swPrivateKey = meta.swPrivateKey;
-	deeplAuthKey = meta.deeplAuthKey;
-	deeplIsPro = meta.deeplIsPro;
+	perLocalUserUserTimelineCacheMax = meta.perLocalUserUserTimelineCacheMax;
+	perRemoteUserUserTimelineCacheMax = meta.perRemoteUserUserTimelineCacheMax;
+	perUserHomeTimelineCacheMax = meta.perUserHomeTimelineCacheMax;
+	perUserListTimelineCacheMax = meta.perUserListTimelineCacheMax;
+	notesPerOneAd = meta.notesPerOneAd;
 }
 
-function save(): void {
-	os.apiWithDialog('admin/update-meta', {
+async function save(): void {
+	await os.apiWithDialog('admin/update-meta', {
 		name,
+		shortName: shortName === '' ? null : shortName,
 		description,
 		maintainerName,
 		maintainerEmail,
+		impressumUrl,
 		pinnedUsers: pinnedUsers.split('\n'),
 		cacheRemoteFiles,
 		cacheRemoteSensitiveFiles,
 		enableServiceWorker,
 		swPublicKey,
 		swPrivateKey,
-		deeplAuthKey,
-		deeplIsPro,
-	}).then(() => {
-		fetchInstance();
+		perLocalUserUserTimelineCacheMax,
+		perRemoteUserUserTimelineCacheMax,
+		perUserHomeTimelineCacheMax,
+		perUserListTimelineCacheMax,
+		notesPerOneAd,
 	});
+
+	fetchInstance();
 }
 
 const headerTabs = $computed(() => []);

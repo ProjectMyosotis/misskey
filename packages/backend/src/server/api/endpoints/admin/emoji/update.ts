@@ -6,7 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { CustomEmojiService } from '@/core/CustomEmojiService.js';
-import type { DriveFilesRepository } from '@/models/index.js';
+import type { DriveFilesRepository } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
 import { ApiError } from '../../../error.js';
 
@@ -74,6 +74,15 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				driveFile = await this.driveFilesRepository.findOneBy({ id: ps.fileId });
 				if (driveFile == null) throw new ApiError(meta.errors.noSuchFile);
 			}
+			const emoji = await this.customEmojiService.getEmojiById(ps.id);
+			if (emoji != null) {
+				if (ps.name !== emoji.name) {
+					const isDuplicate = await this.customEmojiService.checkDuplicate(ps.name);
+					if (isDuplicate) throw new ApiError(meta.errors.sameNameEmojiExists);
+				}
+			} else {
+				throw new ApiError(meta.errors.noSuchEmoji);
+			}
 
 			await this.customEmojiService.update(ps.id, {
 				driveFile,
@@ -84,7 +93,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				isSensitive: ps.isSensitive,
 				localOnly: ps.localOnly,
 				roleIdsThatCanBeUsedThisEmojiAsReaction: ps.roleIdsThatCanBeUsedThisEmojiAsReaction,
-			});
+			}, me);
 		});
 	}
 }

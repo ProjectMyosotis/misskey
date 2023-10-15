@@ -462,6 +462,8 @@ continue: "Fortsett"
 youFollowing: "Følger"
 options: "Alternativ"
 icon: "Avatar"
+replies: "Svar"
+renotes: "Renote"
 _initialAccountSetting:
   theseSettingsCanEditLater: "Du kan endre disse innstillingene senere."
 _achievements:
@@ -573,9 +575,6 @@ _channel:
   nameAndDescription: "Navn og beskrivelse"
 _menuDisplay:
   hide: "Skjul"
-_wordMute:
-  soft: "Myk"
-  hard: "Hard"
 _theme:
   description: "Beskrivelse"
   color: "Farge"
@@ -723,3 +722,5 @@ _deck:
     direct: "Direkte"
 _webhookSettings:
   name: "Navn"
+_moderationLogTypes:
+  suspend: "Suspender"

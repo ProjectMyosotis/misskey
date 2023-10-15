@@ -371,6 +371,8 @@ noRole: "Rol bulunamadı"
 color: "Renk"
 addMemo: "Kısa not ekle"
 icon: "Avatar"
+replies: "yanıt"
+renotes: "vazgeçme"
 _accountDelete:
   started: "Silme işlemi başlatıldı"
 _email:
@@ -384,7 +386,6 @@ _theme:
 _sfx:
   note: "notlar"
   notification: "Bildirim"
-  chat: "Mesajlar"
 _2fa:
   renewTOTPCancel: "Hayır, teşekkürler"
 _permissions:
@@ -446,3 +447,6 @@ _deck:
     tl: "Zaman çizelgesi"
     list: "Listeler"
     mentions: "Bahsetmeler"
+_moderationLogTypes:
+  suspend: "askıya al"
+  resetPassword: "Şifre sıfırlama"

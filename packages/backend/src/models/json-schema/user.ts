@@ -169,6 +169,15 @@ export const packedUserDetailedNotMeOnlySchema = {
 				},
 			},
 		},
+		verifiedLinks: {
+			type: 'array',
+			nullable: false, optional: false,
+			items: {
+				type: 'string',
+				nullable: false, optional: false,
+				format: 'url',
+			},
+		},
 		followersCount: {
 			type: 'number',
 			nullable: false, optional: false,
@@ -262,6 +271,14 @@ export const packedUserDetailedNotMeOnlySchema = {
 		},
 		memo: {
 			type: 'string',
+			nullable: false, optional: true,
+		},
+		notify: {
+			type: 'string',
+			nullable: false, optional: true,
+		},
+		withReplies: {
+			type: 'boolean',
 			nullable: false, optional: true,
 		},
 		//#endregion
@@ -374,13 +391,9 @@ export const packedMeDetailedOnlySchema = {
 				nullable: false, optional: false,
 			},
 		},
-		mutingNotificationTypes: {
-			type: 'array',
-			nullable: true, optional: false,
-			items: {
-				type: 'string',
-				nullable: false, optional: false,
-			},
+		notificationRecieveConfig: {
+			type: 'object',
+			nullable: false, optional: false,
 		},
 		emailNotificationTypes: {
 			type: 'array',

@@ -5,7 +5,7 @@
 
 import { Brackets, In } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
-import type { NotesRepository, MutingsRepository, PollsRepository, PollVotesRepository } from '@/models/index.js';
+import type { NotesRepository, MutingsRepository, PollsRepository, PollVotesRepository } from '@/models/_.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
 import { DI } from '@/di-symbols.js';
@@ -57,9 +57,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				.where('poll.userHost IS NULL')
 				.andWhere('poll.userId != :meId', { meId: me.id })
 				.andWhere('poll.noteVisibility = \'public\'')
-				.andWhere(new Brackets(qb => { qb
-					.where('poll.expiresAt IS NULL')
-					.orWhere('poll.expiresAt > :now', { now: new Date() });
+				.andWhere(new Brackets(qb => {
+					qb
+						.where('poll.expiresAt IS NULL')
+						.orWhere('poll.expiresAt > :now', { now: new Date() });
 				}));
 
 			//#region exclude arleady voted polls
