@@ -29,7 +29,7 @@ import { CacheService } from '@/core/CacheService.js';
 import type { Config } from '@/config.js';
 import { AccountMoveService } from '@/core/AccountMoveService.js';
 import { UtilityService } from '@/core/UtilityService.js';
-import { FunoutTimelineService } from '@/core/FunoutTimelineService.js';
+import { FanoutTimelineService } from '@/core/FanoutTimelineService.js';
 import Logger from '../logger.js';
 
 const logger = new Logger('following/create');
@@ -84,7 +84,7 @@ export class UserFollowingService implements OnModuleInit {
 		private webhookService: WebhookService,
 		private apRendererService: ApRendererService,
 		private accountMoveService: AccountMoveService,
-		private funoutTimelineService: FunoutTimelineService,
+		private fanoutTimelineService: FanoutTimelineService,
 		private perUserFollowingChart: PerUserFollowingChart,
 		private instanceChart: InstanceChart,
 	) {
@@ -293,9 +293,9 @@ export class UserFollowingService implements OnModuleInit {
 		if (this.userEntityService.isLocalUser(follower) && !silent) {
 			// Publish follow event
 			this.userEntityService.pack(followee.id, follower, {
-				detail: true,
+				schema: 'UserDetailedNotMe',
 			}).then(async packed => {
-				this.globalEventService.publishMainStream(follower.id, 'follow', packed as Packed<'UserDetailedNotMe'>);
+				this.globalEventService.publishMainStream(follower.id, 'follow', packed);
 
 				const webhooks = (await this.webhookService.getActiveWebhooks()).filter(x => x.userId === follower.id && x.on.includes('follow'));
 				for (const webhook of webhooks) {
@@ -304,8 +304,6 @@ export class UserFollowingService implements OnModuleInit {
 					});
 				}
 			});
-
-			this.funoutTimelineService.purge(`homeTimeline:${follower.id}`);
 		}
 
 		// Publish followed event
@@ -362,7 +360,7 @@ export class UserFollowingService implements OnModuleInit {
 		if (!silent && this.userEntityService.isLocalUser(follower)) {
 			// Publish unfollow event
 			this.userEntityService.pack(followee.id, follower, {
-				detail: true,
+				schema: 'UserDetailedNotMe',
 			}).then(async packed => {
 				this.globalEventService.publishMainStream(follower.id, 'unfollow', packed);
 
@@ -373,8 +371,6 @@ export class UserFollowingService implements OnModuleInit {
 					});
 				}
 			});
-
-			this.funoutTimelineService.purge(`homeTimeline:${follower.id}`);
 		}
 
 		if (this.userEntityService.isLocalUser(follower) && this.userEntityService.isRemoteUser(followee)) {
@@ -504,7 +500,7 @@ export class UserFollowingService implements OnModuleInit {
 			this.userEntityService.pack(follower.id, followee).then(packed => this.globalEventService.publishMainStream(followee.id, 'receiveFollowRequest', packed));
 
 			this.userEntityService.pack(followee.id, followee, {
-				detail: true,
+				schema: 'MeDetailed',
 			}).then(packed => this.globalEventService.publishMainStream(followee.id, 'meUpdated', packed));
 
 			// 通知を作成
@@ -552,7 +548,7 @@ export class UserFollowingService implements OnModuleInit {
 		});
 
 		this.userEntityService.pack(followee.id, followee, {
-			detail: true,
+			schema: 'MeDetailed',
 		}).then(packed => this.globalEventService.publishMainStream(followee.id, 'meUpdated', packed));
 	}
 
@@ -580,7 +576,7 @@ export class UserFollowingService implements OnModuleInit {
 		}
 
 		this.userEntityService.pack(followee.id, followee, {
-			detail: true,
+			schema: 'MeDetailed',
 		}).then(packed => this.globalEventService.publishMainStream(followee.id, 'meUpdated', packed));
 	}
 
@@ -700,7 +696,7 @@ export class UserFollowingService implements OnModuleInit {
 	@bindThis
 	private async publishUnfollow(followee: Both, follower: Local): Promise<void> {
 		const packedFollowee = await this.userEntityService.pack(followee.id, follower, {
-			detail: true,
+			schema: 'UserDetailedNotMe',
 		});
 
 		this.globalEventService.publishMainStream(follower.id, 'unfollow', packedFollowee);
