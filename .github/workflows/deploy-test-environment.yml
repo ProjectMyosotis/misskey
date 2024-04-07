@@ -1,66 +1,87 @@
-name: Deploy test environment
+name: deploy-test-environment
 
 on:
-  push:
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to deploy (optional)'
+        description: 'Repository to deploy (optional, use the repository where this workflow is stored by default)'
         required: false
-      branch:
-        description: 'Branch to deploy (optional)'
+        default: ''
+      branch_or_hash:
+        description: 'Branch or Commit hash to deploy (optional, use the branch where this workflow is stored by default)'
         required: false
+        default: ''
+      wait_time:
+        description: 'Time to wait in seconds (optional, 1800 seconds by default)'
+        required: false
+        default: ''
 
 jobs:
-  deploy-test-environment:
+  get-pr-ref:
     runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request && startsWith(github.event.comment.body, '/preview')
+    outputs:
+      is-allowed-user: ${{ steps.check-allowed-users.outputs.is-allowed-user }}
+      pr-ref: ${{ steps.get-ref.outputs.pr-ref }}
+      wait_time: ${{ steps.get-wait-time.outputs.wait_time }}
     steps:
-    - name: Set environment variable (for tput command & pnpm)
-      run: |
-        echo "TERM=xterm" >> $GITHUB_ENV
-        REPOSITORY=${{ github.event.inputs.repository || github.repository }}
-        echo "REPOSITORY=$REPOSITORY" >> $GITHUB_ENV
-        BRANCH=${{ github.event.inputs.branch || github.ref_name }}
-        echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
 
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        repository: ${{ env.REPOSITORY }}
-        ref: ${{ env.BRANCH }}
+      - name: Check allowed users
+        id: check-allowed-users
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_ID: ${{ github.repository_owner_id }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+        run: |
+          MEMBERSHIP_STATUS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "https://api.github.com/organizations/$ORG_ID/public_members/$COMMENT_AUTHOR" \
+          -o /dev/null -w '%{http_code}\n' -s)
+          if [ "$MEMBERSHIP_STATUS" -eq 204 ]; then
+            echo "is-allowed-user=true" > $GITHUB_OUTPUT
+          else
+            echo "is-allowed-user=false" > $GITHUB_OUTPUT
+          fi
 
-    - name: Get the latest commit SHA
-      run: |
-        SHA=$(git log -1 --format="%H")
-        echo "SHA=$SHA" >> $GITHUB_ENV
+      - name: Get PR ref
+        id: get-ref
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(jq --raw-output .issue.number $GITHUB_EVENT_PATH)
+          PR_REF=$(gh pr view $PR_NUMBER --json headRefName -q '.headRefName')
+          echo "pr-ref=$PR_REF" > $GITHUB_OUTPUT
 
-    - name: Start cloudflare tunnel (quick)
-      run: |
-        wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-        sudo dpkg -i cloudflared-linux-amd64.deb
-        sudo cloudflared tunnel --metrics localhost:55555 --url localhost:3000 > /dev/null 2>&1 &
-        sleep 15
-        TUNNEL_RESPONSE=$(curl http://localhost:55555/quicktunnel)
-        TUNNEL_DOMAIN=$(echo $TUNNEL_RESPONSE | grep -o '"hostname":"[^"]*' | grep -o '[^"]*$')
-        echo "::add-mask::$TUNNEL_DOMAIN"
-        echo "TUNNEL_DOMAIN=$TUNNEL_DOMAIN" >> $GITHUB_ENV
+      - name: Extract wait time
+        id: get-wait-time
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          WAIT_TIME=$(echo "$COMMENT_BODY" | grep -oP '(?<=/preview\s)\d+' || echo "1800")
+          echo "wait_time=$WAIT_TIME" > $GITHUB_OUTPUT
 
-    - name: Install misskey
-      run: |
-        wget https://raw.githubusercontent.com/joinmisskey/bash-install/v4/misskey-install.sh
-        wget https://raw.githubusercontent.com/joinmisskey/bash-install/v4/testenv_githubactions.txt
-        sed -i "s/host=127.0.0.1/host=$TUNNEL_DOMAIN/g" testenv_githubactions.txt
-        sed -i "s|git_repository=https://github.com/misskey-dev/misskey|git_repository=https://github.com/$REPOSITORY|g" testenv_githubactions.txt
-        sed -i "s|git_branch=master|git_branch=$BRANCH|g" testenv_githubactions.txt
-        sudo chmod 555 ./misskey-install.sh
-        sudo bash -x ./misskey-install.sh -c ./testenv_githubactions.txt
+  deploy-test-environment-pr-comment:
+    needs: get-pr-ref
+    if: needs.get-pr-ref.outputs.is-allowed-user == 'true'
+    uses: joinmisskey/misskey-tga/.github/workflows/deploy-test-environment.yml@main
+    with:
+      repository: ${{ github.repository }}
+      branch_or_hash: ${{ needs.get-pr-ref.outputs.pr-ref }}
+      wait_time: ${{ needs.get-pr-ref.outputs.wait_time }}
+    secrets:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
-    - name: Post tunnel info to Discord
-      run: |
-        CURRENT_TIME=$(TZ=Asia/Tokyo date +'%Y-%m-%d %H:%M:%S JST')
-        COMMIT_URL="https://github.com/$REPOSITORY/commit/$SHA"
-        curl -X POST -H "Content-Type: application/json" -d "{\"content\": \"==============================\nURL: https://$TUNNEL_DOMAIN\nRepository: $REPOSITORY\nBranch: $BRANCH\nCommit: $COMMIT_URL\nTime: $CURRENT_TIME\n==============================\"}" ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-    - name: Wait
-      run: |
-        timeout 3600 tail -f /var/log/syslog || true
+  deploy-test-environment-wd:
+    if: github.event_name == 'workflow_dispatch'
+    uses: joinmisskey/misskey-tga/.github/workflows/deploy-test-environment.yml@main
+    with:
+      repository: ${{ inputs.repository || github.repository }}
+      branch_or_hash: ${{ inputs.branch_or_hash || github.ref_name }}
+      wait_time: ${{ inputs.wait_time || '1800' }}
+    secrets:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}

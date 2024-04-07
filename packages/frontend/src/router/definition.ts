@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: syuilo and other misskey contributors
+ * SPDX-FileCopyrightText: syuilo and misskey-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -35,7 +35,7 @@ const routes: RouteDef[] = [{
 	component: page(() => import('@/pages/user/index.vue')),
 }, {
 	name: 'note',
-	path: '/notes/:noteId',
+	path: '/notes/:noteId/:initialTab?',
 	component: page(() => import('@/pages/note.vue')),
 }, {
 	name: 'list',
