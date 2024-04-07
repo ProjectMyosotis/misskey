@@ -1,9 +1,19 @@
 name: Publish Docker image
 
 on:
-  push:
-    branches:
-      - hiyuki/develop
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  REGISTRY_IMAGE: projectmyosotis/misskey
+  TAGS: |
+    type=edge
+    type=ref,event=pr
+    type=ref,event=branch
+    type=semver,pattern={{version}}
+    type=semver,pattern={{major}}.{{minor}}
+    type=semver,pattern={{major}}
 
 jobs:
   # see https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
@@ -28,7 +38,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: projectmyosotis/misskey
+          images: ${{ env.REGISTRY_IMAGE }}
+          tags: ${{ env.TAGS }}
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -42,9 +53,8 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           push: true
-          platforms: ${{ steps.buildx.outputs.platforms }}
+          platforms: ${{ matrix.platform }}
           provenance: false
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
