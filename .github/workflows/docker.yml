@@ -15,7 +15,6 @@ jobs:
       matrix:
         platform:
           - linux/amd64
-          - linux/arm64
     steps:
       - name: Prepare
         run: |
@@ -43,7 +42,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           push: true
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ steps.buildx.outputs.platforms }}
           provenance: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
