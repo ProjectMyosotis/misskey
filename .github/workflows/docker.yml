@@ -1,6 +1,9 @@
 name: Publish Docker image
 
 on:
+  push:
+    branches:
+      - hiyuki/develop
   release:
     types: [published]
   workflow_dispatch:
