@@ -3,21 +3,22 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { defineAsyncComponent, Ref, ShallowRef } from 'vue';
+import { defineAsyncComponent } from 'vue';
 import * as Misskey from 'misskey-js';
+import { url } from '@@/js/config.js';
 import { claimAchievement } from './achievements.js';
+import type { Ref, ShallowRef } from 'vue';
+import type { MenuItem } from '@/types/menu.js';
 import { $i } from '@/account.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/scripts/misskey-api.js';
 import { copyToClipboard } from '@/scripts/copy-to-clipboard.js';
-import { url } from '@@/js/config.js';
 import { defaultStore, noteActions } from '@/store.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { getUserMenu } from '@/scripts/get-user-menu.js';
 import { clipsCache, favoritedChannelsCache } from '@/cache.js';
-import type { MenuItem } from '@/types/menu.js';
 import MkRippleEffect from '@/components/MkRippleEffect.vue';
 import { isSupportShare } from '@/scripts/navigator.js';
 import { getAppearNote } from '@/scripts/get-appear-note.js';
@@ -194,7 +195,7 @@ export function getNoteMenu(props: {
 				noteId: appearNote.id,
 			});
 
-			if (Date.now() - new Date(appearNote.createdAt).getTime() < 1000 * 60) {
+			if (Date.now() - new Date(appearNote.createdAt).getTime() < 1000 * 60 && appearNote.userId === $i.id) {
 				claimAchievement('noteDeletedWithin1min');
 			}
 		});
@@ -207,15 +208,7 @@ export function getNoteMenu(props: {
 		}).then(({ canceled }) => {
 			if (canceled) return;
 
-			misskeyApi('notes/delete', {
-				noteId: appearNote.id,
-			});
-
-			os.post({ initialNote: appearNote, renote: appearNote.renote, reply: appearNote.reply, channel: appearNote.channel });
-
-			if (Date.now() - new Date(appearNote.createdAt).getTime() < 1000 * 60) {
-				claimAchievement('noteDeletedWithin1min');
-			}
+			os.post({ initialNote: appearNote, renote: appearNote.renote, reply: appearNote.reply, channel: appearNote.channel, deleteInitialNoteAfterPost: true });
 		});
 	}
 
@@ -234,11 +227,6 @@ export function getNoteMenu(props: {
 
 	function copyContent(): void {
 		copyToClipboard(appearNote.text);
-		os.success();
-	}
-
-	function copyLink(): void {
-		copyToClipboard(`${url}/notes/${appearNote.id}`);
 		os.success();
 	}
 
@@ -322,6 +310,13 @@ export function getNoteMenu(props: {
 
 		if (appearNote.url || appearNote.uri) {
 			menuItems.push({
+				icon: 'ti ti-link',
+				text: i18n.ts.copyRemoteLink,
+				action: () => {
+					copyToClipboard(appearNote.url ?? appearNote.uri);
+					os.success();
+				},
+			}, {
 				icon: 'ti ti-external-link',
 				text: i18n.ts.showOnRemote,
 				action: () => {
@@ -474,6 +469,13 @@ export function getNoteMenu(props: {
 
 		if (appearNote.url || appearNote.uri) {
 			menuItems.push({
+				icon: 'ti ti-link',
+				text: i18n.ts.copyRemoteLink,
+				action: () => {
+					copyToClipboard(appearNote.url ?? appearNote.uri);
+					os.success();
+				},
+			}, {
 				icon: 'ti ti-external-link',
 				text: i18n.ts.showOnRemote,
 				action: () => {
@@ -548,7 +550,7 @@ export function getRenoteMenu(props: {
 			icon: 'ti ti-repeat',
 			action: () => {
 				const el = props.renoteButton.value;
-				if (el) {
+				if (el && defaultStore.state.animation) {
 					const rect = el.getBoundingClientRect();
 					const x = rect.left + (el.offsetWidth / 2);
 					const y = rect.top + (el.offsetHeight / 2);
@@ -586,7 +588,7 @@ export function getRenoteMenu(props: {
 			icon: 'ti ti-repeat',
 			action: () => {
 				const el = props.renoteButton.value;
-				if (el) {
+				if (el && defaultStore.state.animation) {
 					const rect = el.getBoundingClientRect();
 					const x = rect.left + (el.offsetWidth / 2);
 					const y = rect.top + (el.offsetHeight / 2);
@@ -637,7 +639,7 @@ export function getRenoteMenu(props: {
 					text: channel.name,
 					action: () => {
 						const el = props.renoteButton.value;
-						if (el) {
+						if (el && defaultStore.state.animation) {
 							const rect = el.getBoundingClientRect();
 							const x = rect.left + (el.offsetWidth / 2);
 							const y = rect.top + (el.offsetHeight / 2);
