@@ -40,8 +40,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<template #label>{{ i18n.ts.display }}</template>
 			<option value="sideFull">{{ i18n.ts._menuDisplay.sideFull }}</option>
 			<option value="sideIcon">{{ i18n.ts._menuDisplay.sideIcon }}</option>
-			<option value="top">{{ i18n.ts._menuDisplay.top }}</option>
-		<!-- <MkRadio v-model="menuDisplay" value="hide" disabled>{{ i18n.ts._menuDisplay.hide }}</MkRadio>--> <!-- TODO: サイドバーを完全に隠せるようにすると、別途ハンバーガーボタンのようなものをUIに表示する必要があり面倒 -->
 		</MkRadios>
 
 		<SearchMarker :keywords="['navbar', 'sidebar', 'toggle', 'button', 'sub']">
@@ -66,16 +64,17 @@ import MkPreferenceContainer from '@/components/MkPreferenceContainer.vue';
 import * as os from '@/os.js';
 import { navbarItemDef } from '@/navbar.js';
 import { store } from '@/store.js';
-import { reloadAsk } from '@/utility/reload-ask.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { prefer } from '@/preferences.js';
 import { PREF_DEF } from '@/preferences/def.js';
+import { getInitialPrefValue } from '@/preferences/manager.js';
+import { genId } from '@/utility/id.js';
 
 const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
 
 const items = ref(prefer.s.menu.map(x => ({
-	id: Math.random().toString(),
+	id: genId(),
 	type: x,
 })));
 
@@ -94,7 +93,7 @@ async function addItem() {
 	});
 	if (canceled) return;
 	items.value = [...items.value, {
-		id: Math.random().toString(),
+		id: genId(),
 		type: item,
 	}];
 }
@@ -105,12 +104,11 @@ function removeItem(index: number) {
 
 async function save() {
 	prefer.commit('menu', items.value.map(x => x.type));
-	await reloadAsk({ reason: i18n.ts.reloadToApplySetting, unison: true });
 }
 
 function reset() {
-	items.value = PREF_DEF.menu.default.map(x => ({
-		id: Math.random().toString(),
+	items.value = getInitialPrefValue('menu').map(x => ({
+		id: genId(),
 		type: x,
 	}));
 }

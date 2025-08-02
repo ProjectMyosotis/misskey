@@ -188,6 +188,10 @@ export class ClientServerService {
 					'url': 'url',
 				},
 			},
+			'shortcuts': [{
+				'name': 'Safemode',
+				'url': '/?safemode=true',
+			}],
 		};
 
 		manifest = {
@@ -212,6 +216,7 @@ export class ClientServerService {
 			instanceUrl: this.config.url,
 			metaJson: htmlSafeJsonStringify(await this.metaEntityService.packDetailed(meta)),
 			now: Date.now(),
+			federationEnabled: this.meta.federation !== 'none',
 		};
 	}
 
@@ -513,7 +518,12 @@ export class ClientServerService {
 
 			vary(reply.raw, 'Accept');
 
-			if (user != null) {
+			if (
+				user != null && (
+					this.meta.ugcVisibilityForVisitor === 'all' ||
+						(this.meta.ugcVisibilityForVisitor === 'local' && user.host == null)
+				)
+			) {
 				const profile = await this.userProfilesRepository.findOneByOrFail({ userId: user.id });
 				const me = profile.fields
 					? profile.fields
@@ -534,7 +544,7 @@ export class ClientServerService {
 
 				return await reply.view('user', {
 					user, profile, me,
-					avatarUrl: user.avatarUrl ?? this.userEntityService.getIdenticonUrl(user),
+					avatarUrl: _user.avatarUrl,
 					sub: request.params.sub,
 					...await this.generateCommonPugData(this.meta),
 					clientCtx: htmlSafeJsonStringify({
@@ -574,10 +584,16 @@ export class ClientServerService {
 					id: request.params.note,
 					visibility: In(['public', 'home']),
 				},
-				relations: ['user'],
+				relations: ['user', 'reply', 'renote'],
 			});
 
-			if (note && !note.user!.requireSigninToViewContents) {
+			if (
+				note &&
+				!note.user!.requireSigninToViewContents &&
+				(this.meta.ugcVisibilityForVisitor === 'all' ||
+					(this.meta.ugcVisibilityForVisitor === 'local' && note.userHost == null)
+				)
+			) {
 				const _note = await this.noteEntityService.pack(note);
 				const profile = await this.userProfilesRepository.findOneByOrFail({ userId: note.userId });
 				reply.header('Cache-Control', 'public, max-age=15');
@@ -809,8 +825,11 @@ export class ClientServerService {
 		fastify.get<{ Params: { note: string; } }>('/embed/notes/:note', async (request, reply) => {
 			reply.removeHeader('X-Frame-Options');
 
-			const note = await this.notesRepository.findOneBy({
-				id: request.params.note,
+			const note = await this.notesRepository.findOne({
+				where: {
+					id: request.params.note,
+				},
+				relations: ['user', 'reply', 'renote'],
 			});
 
 			if (note == null) return;

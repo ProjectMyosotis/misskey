@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <PageWithHeader :actions="headerActions" :tabs="headerTabs">
-	<MkSpacer :contentMax="700">
+	<div class="_spacer" style="--MI_SPACER-w: 700px;">
 		<Transition :name="prefer.s.animation ? 'fade' : ''" mode="out-in">
 			<div v-if="flash" :key="flash.id">
 				<Transition :name="prefer.s.animation ? 'zoom' : ''" mode="out-in">
@@ -51,12 +51,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</div>
 				<MkA v-if="$i && $i.id === flash.userId" :to="`/play/${flash.id}/edit`" style="color: var(--MI_THEME-accent);">{{ i18n.ts._play.editThisPage }}</MkA>
-				<MkAd :prefer="['horizontal', 'horizontal-big']"/>
+				<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
 			</div>
 			<MkError v-else-if="error" @retry="fetchFlash()"/>
 			<MkLoading v-else/>
 		</Transition>
-	</MkSpacer>
+	</div>
 </PageWithHeader>
 </template>
 
@@ -238,12 +238,12 @@ async function run() {
 	}
 }
 
-function reportAbuse() {
+async function reportAbuse() {
 	if (!flash.value) return;
 
 	const pageUrl = `${url}/play/${flash.value.id}`;
 
-	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkAbuseReportWindow.vue')), {
+	const { dispose } = await os.popupAsyncWithDialog(import('@/components/MkAbuseReportWindow.vue').then(x => x.default), {
 		user: flash.value.user,
 		initialComment: `Play: ${pageUrl}\n-----\n`,
 	}, {
@@ -366,6 +366,7 @@ definePage(() => ({
 
 			> .items {
 				display: flex;
+				flex-wrap: wrap;
 				justify-content: center;
 				gap: 12px;
 				padding: 16px;

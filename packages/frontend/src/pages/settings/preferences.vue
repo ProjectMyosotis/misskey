@@ -11,10 +11,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</MkFeatureBanner>
 
 		<div class="_gaps_s">
-			<SearchMarker :keywords="['general']">
-				<MkFolder>
+			<SearchMarker v-slot="slotProps" :keywords="['general']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts.general }}</SearchLabel></template>
-					<template #icon><i class="ti ti-settings"></i></template>
+					<template #icon><SearchIcon><i class="ti ti-settings"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<SearchMarker :keywords="['language']">
@@ -41,19 +41,31 @@ SPDX-License-Identifier: AGPL-3.0-only
 							</MkRadios>
 						</SearchMarker>
 
-						<div class="_gaps_s">
-							<SearchMarker :keywords="['blur']">
-								<MkPreferenceContainer k="useBlurEffect">
-									<MkSwitch v-model="useBlurEffect">
-										<template #label><SearchLabel>{{ i18n.ts.useBlurEffect }}</SearchLabel></template>
-									</MkSwitch>
+						<SearchMarker :keywords="['realtimemode']">
+							<MkSwitch v-model="realtimeMode">
+								<template #label><i class="ti ti-bolt"></i> <SearchLabel>{{ i18n.ts.realtimeMode }}</SearchLabel></template>
+								<template #caption><SearchKeyword>{{ i18n.ts._settings.realtimeMode_description }}</SearchKeyword></template>
+							</MkSwitch>
+						</SearchMarker>
+
+						<MkDisableSection :disabled="realtimeMode">
+							<SearchMarker :keywords="['polling', 'interval']">
+								<MkPreferenceContainer k="pollingInterval">
+									<MkRange v-model="pollingInterval" :min="1" :max="3" :step="1" easing :showTicks="true" :textConverter="(v) => v === 1 ? i18n.ts.low : v === 2 ? i18n.ts.middle : v === 3 ? i18n.ts.high : ''">
+										<template #label><SearchLabel>{{ i18n.ts._settings.contentsUpdateFrequency }}</SearchLabel></template>
+										<template #caption><SearchKeyword>{{ i18n.ts._settings.contentsUpdateFrequency_description }}</SearchKeyword><br><SearchKeyword>{{ i18n.ts._settings.contentsUpdateFrequency_description2 }}</SearchKeyword></template>
+										<template #prefix><i class="ti ti-player-play"></i></template>
+										<template #suffix><i class="ti ti-player-track-next"></i></template>
+									</MkRange>
 								</MkPreferenceContainer>
 							</SearchMarker>
+						</MkDisableSection>
 
-							<SearchMarker :keywords="['blur', 'modal']">
-								<MkPreferenceContainer k="useBlurEffectForModal">
-									<MkSwitch v-model="useBlurEffectForModal">
-										<template #label><SearchLabel>{{ i18n.ts.useBlurEffectForModal }}</SearchLabel></template>
+						<div class="_gaps_s">
+							<SearchMarker :keywords="['titlebar', 'show']">
+								<MkPreferenceContainer k="showTitlebar">
+									<MkSwitch v-model="showTitlebar">
+										<template #label><SearchLabel>{{ i18n.ts.showTitlebar }}</SearchLabel></template>
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
@@ -98,6 +110,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
+							<!--
 							<SearchMarker :keywords="['auto', 'load', 'auto', 'more', 'scroll']">
 								<MkPreferenceContainer k="enableInfiniteScroll">
 									<MkSwitch v-model="enableInfiniteScroll">
@@ -105,6 +118,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 									</MkSwitch>
 								</MkPreferenceContainer>
 							</SearchMarker>
+							-->
 						</div>
 
 						<SearchMarker :keywords="['emoji', 'style', 'native', 'system', 'fluent', 'twemoji']">
@@ -120,23 +134,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</div>
 							</MkPreferenceContainer>
 						</SearchMarker>
-
-						<SearchMarker :keywords="['pinned', 'list']">
-							<MkFolder>
-								<template #label><SearchLabel>{{ i18n.ts.pinnedList }}</SearchLabel></template>
-								<!-- 複数ピン止め管理できるようにしたいけどめんどいので一旦ひとつのみ -->
-								<MkButton v-if="prefer.r.pinnedUserLists.value.length === 0" @click="setPinnedList()">{{ i18n.ts.add }}</MkButton>
-								<MkButton v-else danger @click="removePinnedList()"><i class="ti ti-trash"></i> {{ i18n.ts.remove }}</MkButton>
-							</MkFolder>
-						</SearchMarker>
 					</div>
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['timeline', 'note']">
-				<MkFolder>
+			<SearchMarker v-slot="slotProps" :keywords="['timeline', 'note']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts._settings.timelineAndNote }}</SearchLabel></template>
-					<template #icon><i class="ti ti-notes"></i></template>
+					<template #icon><SearchIcon><i class="ti ti-notes"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<div class="_gaps_s">
@@ -165,20 +170,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 								</MkPreferenceContainer>
 							</SearchMarker>
 
-							<SearchMarker :keywords="['note', 'timeline', 'gap']">
-								<MkPreferenceContainer k="showGapBetweenNotesInTimeline">
-									<MkSwitch v-model="showGapBetweenNotesInTimeline">
-										<template #label><SearchLabel>{{ i18n.ts.showGapBetweenNotesInTimeline }}</SearchLabel></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
-							</SearchMarker>
-
-							<SearchMarker :keywords="['disable', 'streaming', 'timeline']">
-								<MkPreferenceContainer k="disableStreamingTimeline">
-									<MkSwitch v-model="disableStreamingTimeline">
-										<template #label><SearchLabel>{{ i18n.ts.disableStreamingTimeline }}</SearchLabel></template>
-									</MkSwitch>
-								</MkPreferenceContainer>
+							<SearchMarker :keywords="['pinned', 'list']">
+								<MkFolder>
+									<template #label><SearchLabel>{{ i18n.ts.pinnedList }}</SearchLabel></template>
+									<!-- 複数ピン止め管理できるようにしたいけどめんどいので一旦ひとつのみ -->
+									<MkButton v-if="prefer.r.pinnedUserLists.value.length === 0" @click="setPinnedList()">{{ i18n.ts.add }}</MkButton>
+									<MkButton v-else danger @click="removePinnedList()"><i class="ti ti-trash"></i> {{ i18n.ts.remove }}</MkButton>
+								</MkFolder>
 							</SearchMarker>
 						</div>
 
@@ -230,6 +228,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 									<MkPreferenceContainer k="useReactionPickerForContextMenu">
 										<MkSwitch v-model="useReactionPickerForContextMenu">
 											<template #label><SearchLabel>{{ i18n.ts.useReactionPickerForContextMenu }}</SearchLabel></template>
+										</MkSwitch>
+									</MkPreferenceContainer>
+								</SearchMarker>
+
+								<SearchMarker :keywords="['reaction', 'order']">
+									<MkPreferenceContainer k="showAvailableReactionsFirstInNote">
+										<MkSwitch v-model="showAvailableReactionsFirstInNote">
+											<template #label><SearchLabel>{{ i18n.ts._settings.showAvailableReactionsFirstInNote }}</SearchLabel></template>
 										</MkSwitch>
 									</MkPreferenceContainer>
 								</SearchMarker>
@@ -292,10 +298,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['post', 'form']">
-				<MkFolder>
+			<SearchMarker v-slot="slotProps" :keywords="['post', 'form']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts.postForm }}</SearchLabel></template>
-					<template #icon><i class="ti ti-edit"></i></template>
+					<template #icon><SearchIcon><i class="ti ti-edit"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<div class="_gaps_s">
@@ -354,10 +360,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['notification']">
-				<MkFolder>
+			<SearchMarker v-slot="slotProps" :keywords="['notification']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts.notifications }}</SearchLabel></template>
-					<template #icon><i class="ti ti-bell"></i></template>
+					<template #icon><SearchIcon><i class="ti ti-bell"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<SearchMarker :keywords="['group']">
@@ -395,10 +401,242 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['datasaver']">
-				<MkFolder>
+			<template v-if="$i.policies.chatAvailability !== 'unavailable'">
+				<SearchMarker v-slot="slotProps" :keywords="['chat', 'messaging']">
+					<MkFolder :defaultOpen="slotProps.isParentOfTarget">
+						<template #label><SearchLabel>{{ i18n.ts.chat }}</SearchLabel></template>
+						<template #icon><SearchIcon><i class="ti ti-messages"></i></SearchIcon></template>
+
+						<div class="_gaps_s">
+							<SearchMarker :keywords="['show', 'sender', 'name']">
+								<MkPreferenceContainer k="chat.showSenderName">
+									<MkSwitch v-model="chatShowSenderName">
+										<template #label><SearchLabel>{{ i18n.ts._settings._chat.showSenderName }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['send', 'enter', 'newline']">
+								<MkPreferenceContainer k="chat.sendOnEnter">
+									<MkSwitch v-model="chatSendOnEnter">
+										<template #label><SearchLabel>{{ i18n.ts._settings._chat.sendOnEnter }}</SearchLabel></template>
+										<template #caption>
+											<div class="_gaps_s">
+												<div>
+													<b>{{ i18n.ts._settings.ifOn }}:</b>
+													<div>{{ i18n.ts._chat.send }}: Enter</div>
+													<div>{{ i18n.ts._chat.newline }}: Shift + Enter</div>
+												</div>
+												<div>
+													<b>{{ i18n.ts._settings.ifOff }}:</b>
+													<div>{{ i18n.ts._chat.send }}: Ctrl + Enter</div>
+													<div>{{ i18n.ts._chat.newline }}: Enter</div>
+												</div>
+											</div>
+										</template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+						</div>
+					</MkFolder>
+				</SearchMarker>
+			</template>
+
+			<SearchMarker v-slot="slotProps" :keywords="['accessibility']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
+					<template #label><SearchLabel>{{ i18n.ts.accessibility }}</SearchLabel></template>
+					<template #icon><SearchIcon><i class="ti ti-accessible"></i></SearchIcon></template>
+
+					<div class="_gaps_m">
+						<MkFeatureBanner icon="/client-assets/mens_room_3d.png" color="#0011ff">
+							<SearchKeyword>{{ i18n.ts._settings.accessibilityBanner }}</SearchKeyword>
+						</MkFeatureBanner>
+
+						<div class="_gaps_s">
+							<SearchMarker :keywords="['animation', 'motion', 'reduce']">
+								<MkPreferenceContainer k="animation">
+									<MkSwitch v-model="reduceAnimation">
+										<template #label><SearchLabel>{{ i18n.ts.reduceUiAnimation }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['disable', 'animation', 'image', 'photo', 'picture', 'media', 'thumbnail', 'gif']">
+								<MkPreferenceContainer k="disableShowingAnimatedImages">
+									<MkSwitch v-model="disableShowingAnimatedImages">
+										<template #label><SearchLabel>{{ i18n.ts.disableShowingAnimatedImages }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['mfm', 'enable', 'show', 'animated']">
+								<MkPreferenceContainer k="animatedMfm">
+									<MkSwitch v-model="animatedMfm">
+										<template #label><SearchLabel>{{ i18n.ts.enableAnimatedMfm }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['swipe', 'horizontal', 'tab']">
+								<MkPreferenceContainer k="enableHorizontalSwipe">
+									<MkSwitch v-model="enableHorizontalSwipe">
+										<template #label><SearchLabel>{{ i18n.ts.enableHorizontalSwipe }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['swipe', 'pull', 'refresh']">
+								<MkPreferenceContainer k="enablePullToRefresh">
+									<MkSwitch v-model="enablePullToRefresh">
+										<template #label><SearchLabel>{{ i18n.ts._settings.enablePullToRefresh }}</SearchLabel></template>
+										<template #caption><SearchKeyword>{{ i18n.ts._settings.enablePullToRefresh_description }}</SearchKeyword></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['keep', 'screen', 'display', 'on']">
+								<MkPreferenceContainer k="keepScreenOn">
+									<MkSwitch v-model="keepScreenOn">
+										<template #label><SearchLabel>{{ i18n.ts.keepScreenOn }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['native', 'system', 'video', 'audio', 'player', 'media']">
+								<MkPreferenceContainer k="useNativeUiForVideoAudioPlayer">
+									<MkSwitch v-model="useNativeUiForVideoAudioPlayer">
+										<template #label><SearchLabel>{{ i18n.ts.useNativeUIForVideoAudioPlayer }}</SearchLabel></template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+
+							<SearchMarker :keywords="['text', 'selectable']">
+								<MkPreferenceContainer k="makeEveryTextElementsSelectable">
+									<MkSwitch v-model="makeEveryTextElementsSelectable">
+										<template #label><SearchLabel>{{ i18n.ts._settings.makeEveryTextElementsSelectable }}</SearchLabel></template>
+										<template #caption>{{ i18n.ts._settings.makeEveryTextElementsSelectable_description }}</template>
+									</MkSwitch>
+								</MkPreferenceContainer>
+							</SearchMarker>
+						</div>
+
+						<SearchMarker :keywords="['menu', 'style', 'popup', 'drawer']">
+							<MkPreferenceContainer k="menuStyle">
+								<MkSelect v-model="menuStyle">
+									<template #label><SearchLabel>{{ i18n.ts.menuStyle }}</SearchLabel></template>
+									<option value="auto">{{ i18n.ts.auto }}</option>
+									<option value="popup">{{ i18n.ts.popup }}</option>
+									<option value="drawer">{{ i18n.ts.drawer }}</option>
+								</MkSelect>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['contextmenu', 'system', 'native']">
+							<MkPreferenceContainer k="contextMenu">
+								<MkSelect v-model="contextMenu">
+									<template #label><SearchLabel>{{ i18n.ts._contextMenu.title }}</SearchLabel></template>
+									<option value="app">{{ i18n.ts._contextMenu.app }}</option>
+									<option value="appWithShift">{{ i18n.ts._contextMenu.appWithShift }}</option>
+									<option value="native">{{ i18n.ts._contextMenu.native }}</option>
+								</MkSelect>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['font', 'size']">
+							<MkRadios v-model="fontSize">
+								<template #label><SearchLabel>{{ i18n.ts.fontSize }}</SearchLabel></template>
+								<option :value="null"><span style="font-size: 14px;">Aa</span></option>
+								<option value="1"><span style="font-size: 15px;">Aa</span></option>
+								<option value="2"><span style="font-size: 16px;">Aa</span></option>
+								<option value="3"><span style="font-size: 17px;">Aa</span></option>
+							</MkRadios>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['font', 'system', 'native']">
+							<MkSwitch v-model="useSystemFont">
+								<template #label><SearchLabel>{{ i18n.ts.useSystemFont }}</SearchLabel></template>
+							</MkSwitch>
+						</SearchMarker>
+					</div>
+				</MkFolder>
+			</SearchMarker>
+
+			<SearchMarker v-slot="slotProps" :keywords="['performance']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
+					<template #label><SearchLabel>{{ i18n.ts.performance }}</SearchLabel></template>
+					<template #icon><SearchIcon><i class="ti ti-battery-vertical-eco"></i></SearchIcon></template>
+
+					<div class="_gaps_s">
+						<SearchMarker :keywords="['animation', 'motion', 'reduce']">
+							<MkPreferenceContainer k="animation">
+								<MkSwitch :modelValue="!reduceAnimation" @update:modelValue="v => reduceAnimation = !v">
+									<template #label><SearchLabel>{{ i18n.ts._settings.uiAnimations }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['blur']">
+							<MkPreferenceContainer k="useBlurEffect">
+								<MkSwitch v-model="useBlurEffect">
+									<template #label><SearchLabel>{{ i18n.ts.useBlurEffect }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['blur', 'modal']">
+							<MkPreferenceContainer k="useBlurEffectForModal">
+								<MkSwitch v-model="useBlurEffectForModal">
+									<template #label><SearchLabel>{{ i18n.ts.useBlurEffectForModal }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['blurhash', 'image', 'photo', 'picture', 'thumbnail', 'placeholder']">
+							<MkPreferenceContainer k="enableHighQualityImagePlaceholders">
+								<MkSwitch v-model="enableHighQualityImagePlaceholders">
+									<template #label><SearchLabel>{{ i18n.ts._settings.enableHighQualityImagePlaceholders }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<SearchMarker :keywords="['sticky']">
+							<MkPreferenceContainer k="useStickyIcons">
+								<MkSwitch v-model="useStickyIcons">
+									<template #label><SearchLabel>{{ i18n.ts._settings.useStickyIcons }}</SearchLabel></template>
+									<template #caption><SearchKeyword>{{ i18n.ts.turnOffToImprovePerformance }}</SearchKeyword></template>
+								</MkSwitch>
+							</MkPreferenceContainer>
+						</SearchMarker>
+
+						<MkInfo>
+							<div class="_gaps_s">
+								<div>{{ i18n.ts._clientPerformanceIssueTip.title }}:</div>
+								<div>
+									<div><b>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAdBlocker }}</b></div>
+									<div>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAdBlocker_description }}</div>
+								</div>
+								<div>
+									<div><b>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledCustomCss }}</b></div>
+									<div>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledCustomCss_description }}</div>
+								</div>
+								<div>
+									<div><b>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAddons }}</b></div>
+									<div>{{ i18n.ts._clientPerformanceIssueTip.makeSureDisabledAddons_description }}</div>
+								</div>
+							</div>
+						</MkInfo>
+					</div>
+				</MkFolder>
+			</SearchMarker>
+
+			<SearchMarker v-slot="slotProps" :keywords="['datasaver']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts.dataSaver }}</SearchLabel></template>
-					<template #icon><i class="ti ti-antenna-bars-3"></i></template>
+					<template #icon><SearchIcon><i class="ti ti-antenna-bars-3"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<MkInfo>{{ i18n.ts.reloadRequiredToApplySettings }}</MkInfo>
@@ -416,9 +654,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 								{{ i18n.ts._dataSaver._avatar.title }}
 								<template #caption>{{ i18n.ts._dataSaver._avatar.description }}</template>
 							</MkSwitch>
-							<MkSwitch v-model="dataSaver.urlPreview">
-								{{ i18n.ts._dataSaver._urlPreview.title }}
-								<template #caption>{{ i18n.ts._dataSaver._urlPreview.description }}</template>
+							<MkSwitch v-model="dataSaver.disableUrlPreview" :disabled="!instance.enableUrlPreview">
+								{{ i18n.ts._dataSaver._disableUrlPreview.title }}
+								<template #caption>{{ i18n.ts._dataSaver._disableUrlPreview.description }}</template>
+							</MkSwitch>
+							<MkSwitch v-model="dataSaver.urlPreviewThumbnail" :disabled="!instance.enableUrlPreview || dataSaver.disableUrlPreview">
+								{{ i18n.ts._dataSaver._urlPreviewThumbnail.title }}
+								<template #caption>{{ i18n.ts._dataSaver._urlPreviewThumbnail.description }}</template>
 							</MkSwitch>
 							<MkSwitch v-model="dataSaver.code">
 								{{ i18n.ts._dataSaver._code.title }}
@@ -429,49 +671,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 			</SearchMarker>
 
-			<SearchMarker :keywords="['chat', 'messaging']">
-				<MkFolder>
-					<template #label><SearchLabel>{{ i18n.ts.chat }}</SearchLabel></template>
-					<template #icon><i class="ti ti-messages"></i></template>
-
-					<div class="_gaps_s">
-						<SearchMarker :keywords="['show', 'sender', 'name']">
-							<MkPreferenceContainer k="chat.showSenderName">
-								<MkSwitch v-model="chatShowSenderName">
-									<template #label><SearchLabel>{{ i18n.ts._settings._chat.showSenderName }}</SearchLabel></template>
-								</MkSwitch>
-							</MkPreferenceContainer>
-						</SearchMarker>
-
-						<SearchMarker :keywords="['send', 'enter', 'newline']">
-							<MkPreferenceContainer k="chat.sendOnEnter">
-								<MkSwitch v-model="chatSendOnEnter">
-									<template #label><SearchLabel>{{ i18n.ts._settings._chat.sendOnEnter }}</SearchLabel></template>
-									<template #caption>
-										<div class="_gaps_s">
-											<div>
-												<b>{{ i18n.ts._settings.ifOn }}:</b>
-												<div>{{ i18n.ts._chat.send }}: Enter</div>
-												<div>{{ i18n.ts._chat.newline }}: Shift + Enter</div>
-											</div>
-											<div>
-												<b>{{ i18n.ts._settings.ifOff }}:</b>
-												<div>{{ i18n.ts._chat.send }}: Ctrl + Enter</div>
-												<div>{{ i18n.ts._chat.newline }}: Enter</div>
-											</div>
-										</div>
-									</template>
-								</MkSwitch>
-							</MkPreferenceContainer>
-						</SearchMarker>
-					</div>
-				</MkFolder>
-			</SearchMarker>
-
-			<SearchMarker :keywords="['other']">
-				<MkFolder>
+			<SearchMarker v-slot="slotProps" :keywords="['other']">
+				<MkFolder :defaultOpen="slotProps.isParentOfTarget">
 					<template #label><SearchLabel>{{ i18n.ts.other }}</SearchLabel></template>
-					<template #icon><i class="ti ti-settings-cog"></i></template>
+					<template #icon><SearchIcon><i class="ti ti-settings-cog"></i></SearchIcon></template>
 
 					<div class="_gaps_m">
 						<div class="_gaps_s">
@@ -585,14 +788,13 @@ import MkRadios from '@/components/MkRadios.vue';
 import MkRange from '@/components/MkRange.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import MkButton from '@/components/MkButton.vue';
-import FormSection from '@/components/form/section.vue';
+import MkDisableSection from '@/components/MkDisableSection.vue';
 import FormLink from '@/components/form/link.vue';
 import MkLink from '@/components/MkLink.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import { store } from '@/store.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
-import { reloadAsk } from '@/utility/reload-ask.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { miLocalStorage } from '@/local-storage.js';
@@ -602,11 +804,19 @@ import MkFeatureBanner from '@/components/MkFeatureBanner.vue';
 import { globalEvents } from '@/events.js';
 import { claimAchievement } from '@/utility/achievements.js';
 import { instance } from '@/instance.js';
+import { ensureSignin } from '@/i.js';
+import { genId } from '@/utility/id.js';
+import { suggestReload } from '@/utility/reload-suggest.js';
+
+const $i = ensureSignin();
 
 const lang = ref(miLocalStorage.getItem('lang'));
 const dataSaver = ref(prefer.s.dataSaver);
+const realtimeMode = computed(store.makeGetterSetter('realtimeMode'));
 
 const overridedDeviceKind = prefer.model('overridedDeviceKind');
+const pollingInterval = prefer.model('pollingInterval');
+const showTitlebar = prefer.model('showTitlebar');
 const keepCw = prefer.model('keepCw');
 const serverDisconnectedBehavior = prefer.model('serverDisconnectedBehavior');
 const hemisphere = prefer.model('hemisphere');
@@ -624,7 +834,7 @@ const showFixedPostFormInChannel = prefer.model('showFixedPostFormInChannel');
 const numberOfPageCache = prefer.model('numberOfPageCache');
 const enableInfiniteScroll = prefer.model('enableInfiniteScroll');
 const useReactionPickerForContextMenu = prefer.model('useReactionPickerForContextMenu');
-const disableStreamingTimeline = prefer.model('disableStreamingTimeline');
+const showAvailableReactionsFirstInNote = prefer.model('showAvailableReactionsFirstInNote');
 const useGroupedNotifications = prefer.model('useGroupedNotifications');
 const alwaysConfirmFollow = prefer.model('alwaysConfirmFollow');
 const confirmWhenRevealingSensitiveMedia = prefer.model('confirmWhenRevealingSensitiveMedia');
@@ -632,7 +842,6 @@ const confirmOnReact = prefer.model('confirmOnReact');
 const defaultNoteVisibility = prefer.model('defaultNoteVisibility');
 const defaultNoteLocalOnly = prefer.model('defaultNoteLocalOnly');
 const rememberNoteVisibility = prefer.model('rememberNoteVisibility');
-const showGapBetweenNotesInTimeline = prefer.model('showGapBetweenNotesInTimeline');
 const notificationPosition = prefer.model('notificationPosition');
 const notificationStackAxis = prefer.model('notificationStackAxis');
 const instanceTicker = prefer.model('instanceTicker');
@@ -650,6 +859,21 @@ const useBlurEffect = prefer.model('useBlurEffect');
 const defaultFollowWithReplies = prefer.model('defaultFollowWithReplies');
 const chatShowSenderName = prefer.model('chat.showSenderName');
 const chatSendOnEnter = prefer.model('chat.sendOnEnter');
+const useStickyIcons = prefer.model('useStickyIcons');
+const enableHighQualityImagePlaceholders = prefer.model('enableHighQualityImagePlaceholders');
+const reduceAnimation = prefer.model('animation', v => !v, v => !v);
+const animatedMfm = prefer.model('animatedMfm');
+const disableShowingAnimatedImages = prefer.model('disableShowingAnimatedImages');
+const keepScreenOn = prefer.model('keepScreenOn');
+const enableHorizontalSwipe = prefer.model('enableHorizontalSwipe');
+const enablePullToRefresh = prefer.model('enablePullToRefresh');
+const useNativeUiForVideoAudioPlayer = prefer.model('useNativeUiForVideoAudioPlayer');
+const contextMenu = prefer.model('contextMenu');
+const menuStyle = prefer.model('menuStyle');
+const makeEveryTextElementsSelectable = prefer.model('makeEveryTextElementsSelectable');
+
+const fontSize = ref(miLocalStorage.getItem('fontSize'));
+const useSystemFont = ref(miLocalStorage.getItem('useSystemFont') != null);
 
 watch(lang, () => {
 	miLocalStorage.setItem('lang', lang.value as string);
@@ -657,29 +881,55 @@ watch(lang, () => {
 	miLocalStorage.removeItem('localeVersion');
 });
 
+watch(fontSize, () => {
+	if (fontSize.value == null) {
+		miLocalStorage.removeItem('fontSize');
+	} else {
+		miLocalStorage.setItem('fontSize', fontSize.value);
+	}
+});
+
+watch(useSystemFont, () => {
+	if (useSystemFont.value) {
+		miLocalStorage.setItem('useSystemFont', 't');
+	} else {
+		miLocalStorage.removeItem('useSystemFont');
+	}
+});
+
 watch([
 	hemisphere,
 	lang,
+	realtimeMode,
+	pollingInterval,
 	enableInfiniteScroll,
 	showNoteActionsOnlyHover,
 	overridedDeviceKind,
-	disableStreamingTimeline,
 	alwaysConfirmFollow,
 	confirmWhenRevealingSensitiveMedia,
-	showGapBetweenNotesInTimeline,
 	mediaListWithOneImageAppearance,
 	reactionsDisplaySize,
 	limitWidthOfReaction,
 	mediaListWithOneImageAppearance,
-	reactionsDisplaySize,
 	limitWidthOfReaction,
 	instanceTicker,
 	squareAvatars,
 	highlightSensitiveMedia,
 	enableSeasonalScreenEffect,
 	chatShowSenderName,
-], async () => {
-	await reloadAsk({ reason: i18n.ts.reloadToApplySetting, unison: true });
+	useStickyIcons,
+	enableHighQualityImagePlaceholders,
+	keepScreenOn,
+	contextMenu,
+	fontSize,
+	useSystemFont,
+	makeEveryTextElementsSelectable,
+	enableHorizontalSwipe,
+	enablePullToRefresh,
+	reduceAnimation,
+	showAvailableReactionsFirstInNote,
+], () => {
+	suggestReload();
 });
 
 const emojiIndexLangs = ['en-US', 'ja-JP', 'ja-JP_hira'] as const;
@@ -771,7 +1021,7 @@ let smashTimer: number | null = null;
 
 function testNotification(): void {
 	const notification: Misskey.entities.Notification = {
-		id: Math.random().toString(),
+		id: genId(),
 		createdAt: new Date().toUTCString(),
 		isRead: false,
 		type: 'test',

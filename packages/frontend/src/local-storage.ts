@@ -17,7 +17,6 @@ export type Keys = (
 	'lang' |
 	'drafts' |
 	'hashtags' |
-	'wallpaper' |
 	'colorScheme' |
 	'useSystemFont' |
 	'fontSize' |
@@ -34,6 +33,7 @@ export type Keys = (
 	'preferences' |
 	'latestPreferencesUpdate' |
 	'hidePreferencesRestoreSuggestion' |
+	'isSafeMode' |
 	`miux:${string}` |
 	`ui:folder:${string}` |
 	`themes:${string}` | // DEPRECATED
